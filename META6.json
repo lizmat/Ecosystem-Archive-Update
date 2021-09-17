@@ -1,0 +1,26 @@
+{
+  "auth": "zef:lizmat",
+  "authors": [
+    "Elizabeth Mattijsen"
+  ],
+  "build-depends": [
+  ],
+  "depends": [
+    "Cro::HTTP:ver<0.8.6>"
+  ],
+  "description": "Interface to the Raku Ecosystem Archive",
+  "license": "Artistic-2.0",
+  "name": "Ecosystem::Archive",
+  "perl": "6.d",
+  "provides": {
+    "Ecosystem::Archive": "lib/Ecosystem/Archive.rakumod"
+  },
+  "resources": [
+  ],
+  "source-url": "",
+  "tags": [
+  ],
+  "test-depends": [
+  ],
+  "version": "0.0.1"
+}
