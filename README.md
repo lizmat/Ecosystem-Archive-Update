@@ -1,3 +1,5 @@
+[![Actions Status](https://github.com/lizmat/Ecosystem-Archive/workflows/test/badge.svg)](https://github.com/lizmat/Ecosystem-Archive/actions)
+
 NAME
 ====
 
