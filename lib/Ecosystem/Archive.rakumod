@@ -2,11 +2,18 @@ use Cro::HTTP::Client:ver<0.8.6>;
 use JSON::Fast:ver<0.16>;
 
 class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
-    has $.meta         is built(:bind) = 'meta';
     has $.shelves      is built(:bind) = 'archive';
-    has $.http-client  is built(:bind);
-    has %!meta;
+    has $.cpan-meta    is built(:bind) = 'cpan-meta';
+    has $.http-client  is built(:bind) = default-http-client;
+    has %.meta         is built(False);
+    has $.meta-as-json is built(False);
     has $!meta-lock;
+
+    sub default-http-client() {
+        Cro::HTTP::Client.new(
+          user-agent => $?CLASS.^name ~ ' ' ~ $?CLASS.^ver,
+        )
+    }
 
     my constant $zef-base-url  = 'https://360.zef.pm';
     my constant $cpan-base-url = 'http://www.cpan.org';
@@ -20,50 +27,55 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
     }
 
     method TWEAK(--> Nil) {
-        $!meta    := $!meta.IO;
-        $!shelves := $!shelves.IO;
-
-        $!http-client := Cro::HTTP::Client.new(
-          user-agent => $?CLASS.^name ~ ' ' ~ $?CLASS.^ver,
-        ) without $!http-client;
-
+        $!cpan-meta := $!cpan-meta.IO;
+        $!shelves   := $!shelves.IO;
         $!meta-lock := Lock.new;
-        self!update-zef;
-#        self!update-cpan;
+
+        self!update;
     }
 
-    method !update-meta(@updates) {
+    method !update(--> Nil) {
+        await
+          (start self!update-zef),
+          (start self!update-cpan);
+        self!update-meta-as-json;
+    }
+
+    method !update-meta(\updates --> Nil) {
         $!meta-lock.protect: {
-            for @updates -> $key, $value {
-                %!meta{$key} := $value;
-            }
+            my %hash := %!meta.clone;
+            %hash{.key} := .value for updates;
+            %!meta := %hash;
         }
     }
 
     method !update-zef(--> Nil) {
         my $resp := await $!http-client.get('https://360.zef.pm');
-        my @updates;
-        for await $resp.body -> %distribution {
+        self!update-meta: (await $resp.body)
+          .race
+          .map: -> %distribution {
             my $identity := %distribution<dist>;
             if !$identity.contains(':api<') && %distribution<api> -> $api {
-                $identity := $identity ~ ":api<$api>"
-                  unless $api eq "0";
+                unless $api eq "0" {
+                    $identity := $identity ~ ":api<$api>";
+                    %distribution<dist> := $identity;
+                }
             }
-            @updates.push: $identity, %distribution;
 
             my $path := %distribution<path>;
-            self.archive(
+            self!archive-distribution(
               "$zef-base-url/$path",
               %distribution<name>,
               $identity,
               extension($path)
             );
+
+            $identity => %distribution
         }
-        self!update-meta(@updates);
     }
 
     method !update-cpan(--> Nil) {
-        my constant @includes   = @extensions.map: {
+        my @includes = BEGIN @extensions.map: {  # my constant @ dies
             '--include="/id/*/*/*/Perl6/*' ~ $_ ~ '"'
         }
 
@@ -91,7 +103,7 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
 # id/A/AC/ACW/Perl6/Config-Parser-json-1.0.0.tar.gz
             my @parts = $path.split('/');
             my $id   := "@parts[3]:" ~ no-extension(@parts[5]);
-            my $json := $!meta.add("$id.json");
+            my $json := $!cpan-meta.add("$id.json");
 
             # mention of .meta is always first
             if $path.ends-with('.meta') {
@@ -103,6 +115,20 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
                 my %distribution = error => 'Invalid JSON file in distribution';
                 my $text := (await $resp.body).decode;
                 %distribution = $_ with try from-json $text;
+
+                # Version encoded in path has priority over version in META
+                # because PAUSE would not allow uploads of the same version
+                # encoded in the distribution name, but it *would* allow
+                # uploads with a non-matching version in the META.  Also make
+                # sure we skip any "v" in the version string.
+                with $id.rindex('-') {
+                    my $version := $id.substr($_ + 1);
+                    $version := $version.substr(1) if $version.starts-with('v');
+say $id if !%distribution<version> || $version ne %distribution<version>;
+                    %distribution<version> := $version
+                      unless $version.contains(/ <-[\d \.]> /);
+                }
+
                 %new{$id} := %distribution;
             }
 
@@ -127,7 +153,7 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
                     # save identity in zef ecosystem compatible way
                     %distribution<dist> := $identity;
 
-                    self.archive(
+                    self!archive-distribution(
                       "$cpan-base-url/authors/$path",
                       $name,
                       $identity,
@@ -138,31 +164,39 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
             }
         }
 
-#        for $!meta.dir(test => *.ends-with(q/.json/)) -> $io {
-#            my %distribution := from-json $io.slurp;
-#            %
-#        }
-
-        my @updates;
-        self!update-meta(@updates);
+        self!update-meta: $!cpan-meta
+          .dir(test => *.ends-with(q/.json/))
+          .race
+          .map: -> $io {
+            my %distribution := from-json $io.slurp;
+            %distribution<dist> => %distribution
+              unless %distribution<error>
+        }
     }
 
-    # Archive a distribution with given parameters, if not available yet
-    method archive($URL, $name, $identity, $extension) {
+    method !update-meta-as-json() {
+        $!meta-as-json := to-json(%!meta.sort(*.key).map(*.value), :!pretty)
+    }
+
+    method !archive-distribution($URL, $name, $identity, $extension) {
         my $io := $!shelves.add($name);
         $io.mkdir;
         $io := $io.add($identity ~ $extension);
 
         # don't load if we already have it, it's static
         unless $io.e {
-say "archiving $identity";
             my $resp := await $!http-client.get($URL);
             $io.spurt(await $resp.body);
         }
     }
-}
 
-#my $ea := Ecosystem::Archive.new;
+    method update() {
+        my %meta := %!meta.clone;
+        self!update;
+        %meta{%!meta.keys}:delete;
+        %meta
+    }
+}
 
 =begin pod
 
@@ -176,12 +210,142 @@ Ecosystem::Archive - Interface to the Raku Ecosystem Archive
 
 use Ecosystem::Archive;
 
+my $ea = Ecosystem::Archive.new(
+  archive     => 'archive',
+  cpan-meta   => 'cpan-meta',
+  http-client => default-http-client
+);
+
+say "Archive has $ea.meta.elems() identities:";
+.say for $ea.meta.keys.sort;
+
 =end code
 
 =head1 DESCRIPTION
 
 Ecosystem::Archive provides the basic logic to the Raku Programming
-Language Ecosystem Archive.
+Language Ecosystem Archive, a place where (almost) every distribution
+ever available in the Raku Ecosystem, can be obtained even after it has
+been removed (specifically in the case of the old ecosystem master list
+and the distributions kept on CPAN).
+
+=head2 ARGUMENTS
+
+=item archive
+
+The name (or an C<IO> object) of a directory in which to place distributions.
+This is usually a symlink to the "archive" directory of the actual
+L<Raku Ecosystem Archive repository|https://github.com/lizmat/REA>.
+The default is 'archive', aka the 'archive' subdirectory from the current
+directory.
+
+=item cpan-meta
+
+The name (or an C<IO> object) of a directory in which to store C<META6.json>
+files as downloaded from CPAN (and cleaned up).  This is usually a symlink
+to the "cpan-meta" directory of the actual
+L<Raku Ecosystem Archive repository|https://github.com/lizmat/REA>.
+The default is 'cpan-meta', aka the 'cpan-meta' subdirectory from the current
+directory.
+
+=item http-client
+
+The C<Cro::HTTP::Client> object to do downloads with.  Defaults to a
+C<Cro::HTTP::Client> object that advertises this module as its User-Agent.
+
+=head1 METHODS
+
+=head2 archive
+
+=begin code :lang<raku>
+
+say "$ea.archive.dir.elems() different modules in archive";
+
+=end code
+
+The C<IO> object of the directory where distributions are being stored
+in a subdirectory by the name of the module in the distribution.  For
+instance:
+
+  archive
+   |- ...
+   |- silently
+       |- silently:ver<0.0.1>:auth<cpan:ELIZABETH>.tar.gz
+       |- silently:ver<0.0.2>:auth<cpan:ELIZABETH>.tar.gz
+       |- silently:ver<0.0.3>:auth<cpan:ELIZABETH>.tar.gz
+       |- silently:ver<0.0.4>:auth<zef:lizmat>.tar.gz
+   |- ...
+
+Note that a subdirectory will contain B<all> distributions of the name,
+regardless of version, authority or API value.
+
+=head2 cpan-meta
+
+=begin code :lang<raku>
+
+say "$ea.cpan-meta.dir.elems() different CPAN distributions known";
+
+=end code
+
+The C<IO> object of the directory in which the CPAN meta files are being
+stored.  For instance:
+
+  cpan-meta
+    |- ...
+    |- cpan-meta/ELIZABETH:silently-0.0.1.json
+    |- cpan-meta/ELIZABETH:silently-0.0.2.json
+    |- cpan-meta/ELIZABETH:silently-0.0.3.json
+    |- ...
+
+=head2 http-client
+
+=begin code :lang<raku>
+
+say "Information fetched as '$ea.http-client.user-agent()'";
+
+=end code
+
+The C<Cro::HTTP::Client> object that is used for downloading information
+from the Internet.
+
+=head2 meta
+
+=begin code :lang<raku>
+
+say "Archive has $ea.meta.elems() identities, they are:";
+.say for $ea.meta.keys.sort;
+
+=end code
+
+Returns a hash of all of the META information of all distributions, keyed
+by identity (for example "Module::Name:ver<0.1>:auth<foo:bar>:api<1>").
+The value is a hash obtained from the distribution's metd data.
+
+=head2 meta-as-json
+
+=begin code :lang<raku>
+
+say $ea.meta-as-json;  # at least 3MB of text
+
+=end code
+
+Returns the JSON of all the currently known meta-information.
+
+=head2 update
+
+=begin code :lang<raku>
+
+my %updated = $ea.update;
+
+=end code
+
+Updates all the meta-information and downloads any new distributions.
+Returns a hash with the identities and the meta info of any distributions
+that were not seen before.
+
+=head1 TODO
+
+Add support for the old, git based ecosystem.
 
 =head1 AUTHOR
 
