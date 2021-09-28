@@ -285,7 +285,7 @@ die if $++ == 5;
     }
 }
 
-Ecosystem::Archive.new;
+sub MAIN() { Ecosystem::Archive.new }
 
 =begin pod
 
