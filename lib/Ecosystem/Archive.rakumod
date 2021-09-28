@@ -3,6 +3,7 @@ use JSON::Fast:ver<0.16>;
 
 class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
     has $.shelves      is built(:bind) = 'archive';
+    has $.git-meta     is built(:bind) = 'git-meta';
     has $.cpan-meta    is built(:bind) = 'cpan-meta';
     has $.http-client  is built(:bind) = default-http-client;
     has %.meta         is built(False);
@@ -12,6 +13,7 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
     sub default-http-client() {
         Cro::HTTP::Client.new(
           user-agent => $?CLASS.^name ~ ' ' ~ $?CLASS.^ver,
+          :http<1.1>,  # for now
         )
     }
 
@@ -25,8 +27,17 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
     sub extension($string) {
         @extensions.first: { $string.ends-with($_) }
     }
+    sub github-download-URL($user, $repo, $tag = 'master') {
+        "https://github.com/$user/$repo/archive/$tag.tar.gz"
+    }
+    sub subdir-json($initial, $dir, $file) {
+        my $io := $initial.add($dir);
+        $io.mkdir;
+        $io.add("$file.json")
+    }
 
     method TWEAK(--> Nil) {
+        $!git-meta  := $!git-meta.IO;
         $!cpan-meta := $!cpan-meta.IO;
         $!shelves   := $!shelves.IO;
         $!meta-lock := Lock.new;
@@ -36,9 +47,11 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
 
     method !update(--> Nil) {
         await
-          (start self!update-zef),
-          (start self!update-cpan);
-        self!update-meta-as-json;
+#          (start self!update-git),
+          (start self!update-cpan),
+#          (start self!update-zef),
+;
+#        self!update-meta-as-json;
     }
 
     method !update-meta(\updates --> Nil) {
@@ -102,8 +115,9 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
 # id/A/AC/ACW/Perl6/Config-Parser-json-1.0.0.meta
 # id/A/AC/ACW/Perl6/Config-Parser-json-1.0.0.tar.gz
             my @parts = $path.split('/');
-            my $id   := "@parts[3]:" ~ no-extension(@parts[5]);
-            my $json := $!cpan-meta.add("$id.json");
+            my $nick := @parts[3];
+            my $id   := "$nick:&no-extension(@parts[5])";
+            my $json := subdir-json($!cpan-meta, $nick, $id);
 
             # mention of .meta is always first
             if $path.ends-with('.meta') {
@@ -155,9 +169,7 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
 
                     self!archive-distribution(
                       "$cpan-base-url/authors/$path",
-                      $name,
-                      $identity,
-                      extension($path)
+                      $name, $identity, extension($path)
                     );
                 }
                 $json.spurt: to-json(%distribution, :!pretty);
@@ -171,6 +183,81 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
             my %distribution := from-json $io.slurp;
             %distribution<dist> => %distribution
               unless %distribution<error>
+        }
+    }
+
+
+    method !update-git(--> Nil) {
+        my $resp := await $!http-client.get:
+          'https://raw.githubusercontent.com/Raku/ecosystem/master/META.list';
+        my $text := await $resp.body;
+        self!update-meta: $text.lines
+#          .race
+          .map: -> $URL {
+            my $resp := {
+                CATCH { say "problem with $URL" }
+                await $!http-client.get($URL)
+            }();
+            my $text := await $resp.body;
+            my %distribution = error => 'Invalid JSON file in distribution';
+            %distribution = $_ with try from-json $text;
+
+            if %distribution<name> -> $name {
+                if %distribution<version> -> $version {
+# examples:
+# https://raw.githubusercontent.com/bbkr/TinyID/master/META6.json
+# https://gitlab.com/CIAvash/App-Football/raw/master/META6.json
+                    my @parts = $URL.split('/');
+                    my $server := @parts[2];
+                    my $user   := @parts[3];
+                    my $repo   := @parts[4];
+
+                    my $base := $server eq 'raw.githubusercontent.com'
+                      || $server eq 'gist.githubusercontent.com'
+                      ?? 'github'
+                      !! $server eq 'gitlab.com'
+                        ?? 'gitlab'
+                        !! 'git';
+
+                    my $auth := "$base:$user";
+                    my $identity := $name ~ ":ver<$version>:auth<$auth>";
+                    if %distribution<api> -> $api {
+                        $identity := $identity ~ ":api<$api>"
+                          unless $api eq "0";
+                    }
+
+                    if %distribution<auth> && %distribution<auth> ne $auth {
+                        say "MISMATCH: $name: %distribution<auth> -> $auth";
+                        %distribution<auth> := $auth;
+                    }
+
+                    my $io := $!git-meta.add($name);
+                    $io.mkdir;
+                    $io := $io.add("$identity.json");
+                    unless $io.e {
+                        if $base eq 'github' {
+say $identity;
+                            self!archive-distribution(
+                              github-download-URL($user, $repo),
+                              $name, $identity, '.tar.gz'
+                            );
+                            $io.spurt(to-json %distribution, :!pretty);
+                        }
+die if $++ == 5;
+                    }
+
+#                    say "$identity $URL";
+#                    $identity => %distribution;
+#sleep .5;
+                }
+                else {
+                    say "$URL: no version";
+                }
+            }
+            else {
+                say "$URL: no name";
+            }
+            Empty;
         }
     }
 
@@ -197,6 +284,8 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
         %meta
     }
 }
+
+Ecosystem::Archive.new;
 
 =begin pod
 
