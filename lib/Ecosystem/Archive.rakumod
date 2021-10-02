@@ -27,8 +27,24 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
     sub extension($string) {
         @extensions.first: { $string.ends-with($_) }
     }
+    sub determine-base($server) {
+        $server eq 'raw.githubusercontent.com'
+          ?? 'github'
+          !! $server eq 'gitlab.com'
+            ?? 'gitlab'
+            !! Nil
+    }
+    sub build-identity($name, $version, $auth, $api) {
+        my $identity := $name ~ ":ver<$version>:auth<$auth>";
+        ($api && $api ne "0")
+          ?? $identity ~ ":api<$api>"
+          !! $identity
+    }
     sub github-download-URL($user, $repo, $tag = 'master') {
         "https://github.com/$user/$repo/archive/$tag.tar.gz"
+    }
+    sub gitlab-download-URL($user, $repo, $tag = 'master') {
+        "https://gitlab.com/$user/$repo/-/archive/$tag/$repo-$tag.tar.gz"
     }
     sub subdir-json($initial, $dir, $file) {
         my $io := $initial.add($dir);
@@ -47,9 +63,9 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
 
     method !update(--> Nil) {
         await
-#          (start self!update-git),
+          (start self!update-git),
           (start self!update-cpan),
-#          (start self!update-zef),
+          (start self!update-zef),
 ;
 #        self!update-meta-as-json;
     }
@@ -192,7 +208,7 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
           'https://raw.githubusercontent.com/Raku/ecosystem/master/META.list';
         my $text := await $resp.body;
         self!update-meta: $text.lines
-#          .race
+          .race
           .map: -> $URL {
             my $resp := {
                 CATCH { say "problem with $URL" }
@@ -208,47 +224,42 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
 # https://raw.githubusercontent.com/bbkr/TinyID/master/META6.json
 # https://gitlab.com/CIAvash/App-Football/raw/master/META6.json
                     my @parts = $URL.split('/');
-                    my $server := @parts[2];
-                    my $user   := @parts[3];
-                    my $repo   := @parts[4];
+                    if determine-base(@parts[2]) -> $base {
+                        my $user := @parts[3];
+                        my $repo := @parts[4];
 
-                    my $base := $server eq 'raw.githubusercontent.com'
-                      || $server eq 'gist.githubusercontent.com'
-                      ?? 'github'
-                      !! $server eq 'gitlab.com'
-                        ?? 'gitlab'
-                        !! 'git';
+                        unless $user eq 'AlexDaniel' and $repo.contains('foo') {
+                            my $auth := "$base:$user";
+                            if %distribution<auth>
+                              && %distribution<auth> ne $auth {
+# say "MISMATCH: $name: %distribution<auth> -> $auth";
+                                %distribution<auth> := $auth;
+                            }
 
-                    my $auth := "$base:$user";
-                    my $identity := $name ~ ":ver<$version>:auth<$auth>";
-                    if %distribution<api> -> $api {
-                        $identity := $identity ~ ":api<$api>"
-                          unless $api eq "0";
-                    }
-
-                    if %distribution<auth> && %distribution<auth> ne $auth {
-                        say "MISMATCH: $name: %distribution<auth> -> $auth";
-                        %distribution<auth> := $auth;
-                    }
-
-                    my $io := $!git-meta.add($name);
-                    $io.mkdir;
-                    $io := $io.add("$identity.json");
-                    unless $io.e {
-                        if $base eq 'github' {
-say $identity;
-                            self!archive-distribution(
-                              github-download-URL($user, $repo),
-                              $name, $identity, '.tar.gz'
+                            my $identity := build-identity(
+                              $name, $version, $auth, %distribution<api>
                             );
-                            $io.spurt(to-json %distribution, :!pretty);
+                            my $json := subdir-json($!git-meta,$name,$identity);
+                            unless $json.e {
+# Since we cannot determine easily what the default branch is of a repo, we
+# just try the ones that we know are being used in the ecosystem in order of
+# likeliness to succeed, and write the meta info as soon as we could download
+# a tar file.
+                                $json.spurt(to-json %distribution, :!pretty)
+                                  if <master main dev>.first: -> $branch {
+                                      try self!archive-distribution(
+                                        ::("&$base\-download-URL")(
+                                          $user, $repo, $branch
+                                        ),
+                                        $name, $identity, '.tar.gz'
+                                      )
+                                  }
+                            }
                         }
-die if $++ == 5;
                     }
-
-#                    say "$identity $URL";
-#                    $identity => %distribution;
-#sleep .5;
+                    else {
+                        say "$URL: no base determined";
+                    }
                 }
                 else {
                     say "$URL: no version";
@@ -266,15 +277,20 @@ die if $++ == 5;
     }
 
     method !archive-distribution($URL, $name, $identity, $extension) {
-        my $io := $!shelves.add($name);
+        my $io := $!shelves.add($name.substr(0,1).uc).add($name);
         $io.mkdir;
         $io := $io.add($identity ~ $extension);
 
         # don't load if we already have it, it's static
         unless $io.e {
+            CATCH {
+                note "$URL failed";
+            }
             my $resp := await $!http-client.get($URL);
             $io.spurt(await $resp.body);
         }
+
+        True
     }
 
     method update() {
