@@ -57,6 +57,45 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
         $!cpan-meta := $!cpan-meta.IO;
         $!shelves   := $!shelves.IO;
         $!meta-lock := Lock.new;
+
+        await
+          (start self!read-zef),
+          (start self!read-cpan),
+          (start self!read-git),
+        ;
+    }
+
+    method !read-zef(--> Nil) {
+        my $resp := await $!http-client.get('https://360.zef.pm');
+        self!update-meta: (await $resp.body).map: -> %distribution {
+            %distribution<dist> => %distribution
+        }
+    }
+
+    method !read-cpan(--> Nil) {
+        indir $!cpan-meta, {
+            my $proc := shell 'ls */*', :out;
+            self!update-meta: $proc.out.lines
+              .race
+              .map: -> $filename {
+                my %distribution := from-json $filename.IO.slurp;
+                %distribution<dist> => %distribution
+                  unless %distribution<error>;
+            }
+        }
+    }
+
+    method !read-git(--> Nil) {
+        indir $!git-meta, {
+            my $proc := shell 'ls */*', :out;
+            self!update-meta: $proc.out.lines
+              .race
+              .map: -> $filename {
+                my %distribution := from-json $filename.IO.slurp;
+                $filename.split('/').tail.chop(5) => %distribution
+                  unless %distribution<error>;
+            }
+        }
     }
 
     method !update(--> Nil) {
