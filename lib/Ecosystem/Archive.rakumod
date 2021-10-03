@@ -57,8 +57,6 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
         $!cpan-meta := $!cpan-meta.IO;
         $!shelves   := $!shelves.IO;
         $!meta-lock := Lock.new;
-
-        self!update;
     }
 
     method !update(--> Nil) {
@@ -66,8 +64,8 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
           (start self!update-git),
           (start self!update-cpan),
           (start self!update-zef),
-;
-#        self!update-meta-as-json;
+        ;
+        self!update-meta-as-json;
     }
 
     method !update-meta(\updates --> Nil) {
@@ -202,7 +200,6 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
         }
     }
 
-
     method !update-git(--> Nil) {
         my $resp := await $!http-client.get:
           'https://raw.githubusercontent.com/Raku/ecosystem/master/META.list';
@@ -300,8 +297,6 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
         %meta
     }
 }
-
-sub MAIN() { Ecosystem::Archive.new }
 
 =begin pod
 
