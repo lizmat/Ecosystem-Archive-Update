@@ -357,7 +357,6 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
     method investigate-repo($url, $default-auth) {
         my $cloned := $*SPEC.tmpdir.add(now.Num).absolute;
         LEAVE run <rm -rf>, $cloned;
-#        my $cloned := $*PROGRAM.sibling("cloned");
 
         my @parts = $url.split("/");
         return Empty
@@ -424,6 +423,8 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
                 }
             }
         }
+
+        self!update-meta(@added);
         @added
     }
 }
@@ -441,8 +442,9 @@ Ecosystem::Archive - Interface to the Raku Ecosystem Archive
 use Ecosystem::Archive;
 
 my $ea = Ecosystem::Archive.new(
-  archive     => 'archive',
+  shelves     => 'archive',
   cpan-meta   => 'cpan-meta',
+  git-meta    => 'git-meta',
   http-client => default-http-client
 );
 
@@ -575,6 +577,31 @@ say "Information fetched as '$ea.http-client.user-agent()'";
 
 The C<Cro::HTTP::Client> object that is used for downloading information
 from the Internet.
+
+=head2 investigate-repo
+
+=begin code :lang<raku>
+
+my @found = $ea.investigate-repo($url, "lizmat");
+
+=end code
+
+Performs a C<git clone> on the given URL, scans the repo for changes in the
+C<META6.json> file that would change the version, and downloads and saves
+a tar-file of the repository (and the associated META information in
+C<git-meta>) at that state of the repository.
+
+The second positional parameter indicates the default C<auth> value to be
+applied to any JSON information, if no C<auth> value is found or it is
+invalid.
+
+Only C<Github> and C<Gitlab> URLs acre currently supported.
+
+Returns a list of C<Pair>s of the distributions that were added,  with the
+identity as the key, and the META information hash as the value.
+
+Updates the C<.meta> and C<.modules> meta-information in a thread-safe
+manner.
 
 =head2 meta
 
