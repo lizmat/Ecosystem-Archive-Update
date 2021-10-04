@@ -7,6 +7,7 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
     has $.cpan-meta    is built(:bind) = 'cpan-meta';
     has $.http-client  is built(:bind) = default-http-client;
     has %.meta         is built(False);
+    has %.modules      is built(False);
     has $.meta-as-json is built(False);
     has $!meta-lock;
 
@@ -63,6 +64,12 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
           (start self!read-cpan),
           (start self!read-git),
         ;
+
+        for %!meta -> (:key($identity), :value(%distribution)) {
+            if %distribution<provides> -> %provides {
+                %!modules.push($_, $identity) for %provides.keys;
+            }
+        }
     }
 
     method !read-zef(--> Nil) {
@@ -109,9 +116,16 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
 
     method !update-meta(\updates --> Nil) {
         $!meta-lock.protect: {
-            my %hash := %!meta.clone;
-            %hash{.key} := .value for updates;
-            %!meta := %hash;
+            my %meta    := %!meta.clone;
+            my %modules := %!modules.clone;
+            for updates -> (:key($identity), :value(%distribution)) {
+                %meta{$identity} := %distribution;
+                if %distribution<provides> -> %provides {
+                    %modules.push($_, $identity) for %provides.keys;
+                }
+            }
+            %!meta    := %meta;
+            %!modules := %modules;
         }
     }
 
@@ -471,25 +485,31 @@ C<Cro::HTTP::Client> object that advertises this module as its User-Agent.
 
 =head1 METHODS
 
-=head2 archive
+=head2 shelves
 
 =begin code :lang<raku>
 
-say "$ea.archive.dir.elems() different modules in archive";
+indir $ea.shelves {
+    my $distros = (shell 'ls */*', :out).out.lines.elems;
+    say "$distros different distributions in archive";
+}
 
 =end code
 
 The C<IO> object of the directory where distributions are being stored
 in a subdirectory by the name of the module in the distribution.  For
-instance:
+instance the C<silently> distribution:
 
   archive
    |- ...
-   |- silently
-       |- silently:ver<0.0.1>:auth<cpan:ELIZABETH>.tar.gz
-       |- silently:ver<0.0.2>:auth<cpan:ELIZABETH>.tar.gz
-       |- silently:ver<0.0.3>:auth<cpan:ELIZABETH>.tar.gz
-       |- silently:ver<0.0.4>:auth<zef:lizmat>.tar.gz
+   |- S
+      |- ...
+      |- silently
+          |- silently:ver<0.0.1>:auth<cpan:ELIZABETH>.tar.gz
+          |- silently:ver<0.0.2>:auth<cpan:ELIZABETH>.tar.gz
+          |- silently:ver<0.0.3>:auth<cpan:ELIZABETH>.tar.gz
+          |- silently:ver<0.0.4>:auth<zef:lizmat>.tar.gz
+      |- ...
    |- ...
 
 Note that a subdirectory will contain B<all> distributions of the name,
@@ -499,18 +519,50 @@ regardless of version, authority or API value.
 
 =begin code :lang<raku>
 
-say "$ea.cpan-meta.dir.elems() different CPAN distributions known";
+indir $ea.cpan-meta {
+    my $jsons = (shell 'ls */*', :out).out.lines.elems;
+    say "$jsons different distributions on CPAN";
+}
 
 =end code
 
 The C<IO> object of the directory in which the CPAN meta files are being
-stored.  For instance:
+stored.  For instance the C<silently> distribution:
 
   cpan-meta
     |- ...
-    |- cpan-meta/ELIZABETH:silently-0.0.1.json
-    |- cpan-meta/ELIZABETH:silently-0.0.2.json
-    |- cpan-meta/ELIZABETH:silently-0.0.3.json
+    |- ELIZABETH
+        |- ...
+        |- ELIZABETH:silently-0.0.1.json
+        |- ELIZABETH:silently-0.0.2.json
+        |- ELIZABETH:silently-0.0.3.json
+        |- ...
+    |- ...
+
+=head2 git-meta
+
+=begin code :lang<raku>
+
+indir $ea.git-meta {
+    my $jsons = (shell 'ls */*', :out).out.lines.elems;
+    say "$jsons different distributions on old ecosystem";
+}
+
+=end code
+
+The C<IO> object of the directory in which the meta files of the old
+ecosystem (using git) are being stored.  For instance the C<IRC::Client>
+distribution:
+
+  git-meta
+    |- ...
+    |- IRC::Client
+        |- IRC::Client:ver<1.001001>:auth<github:zoffixznet>.json
+        |- IRC::Client:ver<1.002001>:auth<github:zoffixznet>.json
+        |- ...
+        |- IRC::Client:ver<3.007010>:auth<github:zoffixznet>.json
+        |- IRC::Client:ver<3.007011>:auth<cpan:ELIZABETH>.json
+        |- IRC::Client:ver<3.009990>:auth<cpan:ELIZABETH>.json
     |- ...
 
 =head2 http-client
@@ -535,7 +587,7 @@ say "Archive has $ea.meta.elems() identities, they are:";
 
 Returns a hash of all of the META information of all distributions, keyed
 by identity (for example "Module::Name:ver<0.1>:auth<foo:bar>:api<1>").
-The value is a hash obtained from the distribution's metd data.
+The value is a hash obtained from the distribution's meta data.
 
 =head2 meta-as-json
 
@@ -547,6 +599,18 @@ say $ea.meta-as-json;  # at least 3MB of text
 
 Returns the JSON of all the currently known meta-information.
 
+=head2 modules
+
+=begin code :lang<raku>
+
+say "Archive has $ea.modules.elems() different modules, they are:";
+.say for $ea.modules.keys.sort;
+
+=end code
+
+Returns a hash keyed by module name, with a list of identities that
+provide that module name, as value.
+
 =head2 update
 
 =begin code :lang<raku>
@@ -557,11 +621,8 @@ my %updated = $ea.update;
 
 Updates all the meta-information and downloads any new distributions.
 Returns a hash with the identities and the meta info of any distributions
-that were not seen before.
-
-=head1 TODO
-
-Add support for the old, git based ecosystem.
+that were not seen before.  Also updates the C<.meta> and C<.modules>
+information in a thread-safe manner.
 
 =head1 AUTHOR
 
