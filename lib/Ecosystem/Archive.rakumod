@@ -254,7 +254,11 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
             my %distribution = error => 'Invalid JSON file in distribution';
             %distribution = $_ with try from-json $text;
 
-            if %distribution<name> -> $name {
+            my $name := %distribution<name>;
+            if $name && $name.contains(' ') {
+                say "$URL: invalid name '$name'";
+            }
+            elsif $name {
                 if %distribution<version> -> $version {
 # examples:
 # https://raw.githubusercontent.com/bbkr/TinyID/master/META6.json
