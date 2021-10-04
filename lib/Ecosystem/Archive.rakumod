@@ -27,10 +27,10 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
     sub extension($string) {
         @extensions.first: { $string.ends-with($_) }
     }
-    sub determine-base($server) {
-        $server eq 'raw.githubusercontent.com'
+    sub determine-base($domain) {
+        $domain eq 'raw.githubusercontent.com' | 'github.com'
           ?? 'github'
-          !! $server eq 'gitlab.com'
+          !! $domain eq 'gitlab.com'
             ?? 'gitlab'
             !! Nil
     }
@@ -334,6 +334,79 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
         self!update;
         %meta{%!meta.keys}:delete;
         %meta
+    }
+
+    method investigate-repo($url, $default-auth) {
+        my $cloned := $*SPEC.tmpdir.add(now.Num).absolute;
+        LEAVE run <rm -rf>, $cloned;
+#        my $cloned := $*PROGRAM.sibling("cloned");
+
+        my @parts = $url.split("/");
+        return Empty
+          unless my $base := determine-base(@parts[2]);
+        my $user := @parts[3];
+        my $repo := @parts[4].split('.').head;
+
+        my @added;
+        run <git clone>, $url, $cloned, :!out, :!err;
+        indir $cloned, {
+            my $proc := run <git branch>, :out;
+            my $default = $proc.out.lines.first(*.starts-with('* ')).substr(2);
+
+            $proc := run <git rev-list --date-order>, $default, :out;
+            my @shas = $proc.out.lines;
+
+            my $sha = $default;
+            my %versions;
+            loop {
+                run <git checkout>, $sha, :!out, :!err;
+
+                my $meta := "META6.json".IO;
+                $meta := "META.info".IO unless $meta.e;
+                last unless $meta.e;
+
+                with try from-json $meta.slurp -> %json {
+                    my $name := %json<name>;
+                    my $auth := %json<auth>;
+                    $auth := "$base:$default-auth"
+                      unless $auth && $auth.contains(":");
+
+                    my $identity := build-identity(
+                      $name, %json<version>, $auth, %json<api>
+                    );
+
+                    unless %!meta{$identity} {
+                        my $io := $!git-meta.add($name);
+                        $io.mkdir;
+                        $io := $io.child("$identity.json");
+
+                        if try self!archive-distribution(
+                            ::("&$base\-download-URL")($user, $repo, $sha),
+                            $name, $identity, '.tar.gz'
+                        ) {
+                            %json<auth> := $auth;
+                            $io.spurt: to-json %json, :!pretty;
+                            @added.push: $identity => %json;
+                        }
+                    }
+                }
+
+                $proc := run <git blame>, $meta, :out;
+                my $line := $proc.out.lines.first: *.contains('"version"');
+                last unless $line;
+
+                $sha = $line.words.head;
+                $sha = $sha.substr(1) if $sha.starts-with('^');
+                with @shas.first(*.starts-with($sha), :k) -> $index {
+                    last if $index == @shas.end;
+                    $sha = @shas[$index + 1];
+                }
+                else {
+                    last;
+                }
+            }
+        }
+        @added
     }
 }
 
