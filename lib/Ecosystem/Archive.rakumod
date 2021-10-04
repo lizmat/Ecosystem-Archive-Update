@@ -64,12 +64,6 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
           (start self!read-cpan),
           (start self!read-git),
         ;
-
-        for %!meta -> (:key($identity), :value(%distribution)) {
-            if %distribution<provides> -> %provides {
-                %!modules.push($_, $identity) for %provides.keys;
-            }
-        }
     }
 
     method !read-zef(--> Nil) {
@@ -380,7 +374,7 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
 
                 my $meta := "META6.json".IO;
                 $meta := "META.info".IO unless $meta.e;
-                last unless $meta.e;
+                last unless $meta.e;  # no meta, can't do anything anymore
 
                 with try from-json $meta.slurp -> %json {
                     my $name := %json<name>;
@@ -427,6 +421,36 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
         self!update-meta(@added);
         @added
     }
+
+    method find-identities($name, :$ver, :$auth, :$api) {
+        my constant regex = / ':ver<' <( <-[>]>+ )> /;
+
+        with %!modules{$name} -> @identities {
+            with $auth {
+                my $needle  := ":auth<$auth>";
+                @identities .= grep(*.contains($needle));
+            }
+            with $api {
+                if $api ne '0' {
+                    my $needle  := ":api<$api>";
+                    @identities .= grep(*.contains($needle));
+                }
+            }
+            with $ver {
+                if $ver ne '*' {
+                    my $version := $ver.Version;
+                    my &op := $ver.contains("+" | "*")
+                      ?? &infix:«>»
+                      !! &infix:«==»;
+                    @identities .= grep: {
+                        op .match(regex).Str.Version, $version
+                    }
+                }
+            }
+
+            @identities.sort(*.match(regex)).reverse
+        }
+    }
 }
 
 =begin pod
@@ -463,7 +487,7 @@ and the distributions kept on CPAN).
 
 =head2 ARGUMENTS
 
-=item archive
+=item shelves
 
 The name (or an C<IO> object) of a directory in which to place distributions.
 This is usually a symlink to the "archive" directory of the actual
@@ -478,6 +502,15 @@ files as downloaded from CPAN (and cleaned up).  This is usually a symlink
 to the "cpan-meta" directory of the actual
 L<Raku Ecosystem Archive repository|https://github.com/lizmat/REA>.
 The default is 'cpan-meta', aka the 'cpan-meta' subdirectory from the current
+directory.
+
+=item git-meta
+
+The name (or an C<IO> object) of a directory in which to store C<META6.json>
+files as downloaded from the old git-based ecosystem.  This is usually a
+symlink to the "git-meta" directory of the actual
+L<Raku Ecosystem Archive repository|https://github.com/lizmat/REA>.
+The default is 'git-meta', aka the 'git-meta' subdirectory from the current
 directory.
 
 =item http-client
@@ -540,6 +573,24 @@ stored.  For instance the C<silently> distribution:
         |- ELIZABETH:silently-0.0.3.json
         |- ...
     |- ...
+
+=head2 find-identities
+
+=begin code :lang<raku>
+
+my @identities = $ea.find-identities('eigenstates', :ver<0.0.3*>);
+say "@identities[0] is the most recent";
+
+=end code
+
+Find the identities that supply the given module name (as a positional
+parameter) and possible refinement with named parameters for C<:ver>,
+C<:auth> and C<:api>.  Note that the C<:ver> specification can contain
+C<+> or C<*> to indicate a range rather than a single version.
+
+The identities will be returned sorted by highest version first.  So if
+you're interested in only the most recent version, then just select the
+first element returned.
 
 =head2 git-meta
 
