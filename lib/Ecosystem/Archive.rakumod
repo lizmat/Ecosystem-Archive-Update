@@ -451,6 +451,14 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
             @identities.sort(*.match(regex)).reverse
         }
     }
+
+    method distro($identity) {
+        my $io := $!shelves
+          .add($identity.substr(0,1).uc)
+          .add($identity.split(':ver<').head)
+          .add("$identity.tar.gz");
+        $io.e ?? $io !! Nil
+    }
 }
 
 =begin pod
@@ -573,6 +581,18 @@ stored.  For instance the C<silently> distribution:
         |- ELIZABETH:silently-0.0.3.json
         |- ...
     |- ...
+
+=head2 distro
+
+=begin code :lang<raku>
+
+my $identity = $ea.find-identities('eigenstates').head;
+say $ea.distro($identity);
+
+=end
+
+Returns an C<IO> object for the given identity, or C<Nil> if it can not be
+found.
 
 =head2 find-identities
 
