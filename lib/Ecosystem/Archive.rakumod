@@ -375,11 +375,11 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
             loop {
                 run <git checkout>, $sha, :!out, :!err;
 
-                my $meta := "META6.json".IO;
-                $meta := "META.info".IO unless $meta.e;
-                last unless $meta.e;  # no meta, can't do anything anymore
+                my $json := "META6.json".IO;
+                $json := "META.info".IO unless $json.e;
+                last unless $json.e;  # no json, can't do anything anymore
 
-                with try from-json $meta.slurp -> %json {
+                with try from-json $json.slurp -> %json {
                     my $name := %json<name>;
                     my $auth := %json<auth>;
                     $auth := "$base:$default-auth"
@@ -405,7 +405,7 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
                     }
                 }
 
-                $proc := run <git blame>, $meta, :out;
+                $proc := run <git blame>, $json, :out;
                 my $line := $proc.out.lines.first: *.contains('"version"');
                 last unless $line;
 
