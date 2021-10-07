@@ -5,6 +5,7 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
     has $.shelves      is built(:bind) = 'archive';
     has $.git-meta     is built(:bind) = 'git-meta';
     has $.cpan-meta    is built(:bind) = 'cpan-meta';
+    has $.zef-meta     is built(:bind) = 'zef-meta';
     has $.http-client  is built(:bind) = default-http-client;
     has %.meta         is built(False);
     has %.modules      is built(False);
@@ -56,6 +57,7 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
     method TWEAK(--> Nil) {
         $!git-meta  := $!git-meta.IO;
         $!cpan-meta := $!cpan-meta.IO;
+        $!zef-meta  := $!zef-meta.IO;
         $!shelves   := $!shelves.IO;
         $!meta-lock := Lock.new;
 
@@ -66,15 +68,8 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
         ;
     }
 
-    method !read-zef(--> Nil) {
-        my $resp := await $!http-client.get('https://360.zef.pm');
-        self!update-meta: (await $resp.body).map: -> %distribution {
-            %distribution<dist> => %distribution
-        }
-    }
-
-    method !read-cpan(--> Nil) {
-        indir $!cpan-meta, {
+    method !read-json($dir) {
+        indir $dir, {
             my $proc := shell 'ls */*', :out;
             self!update-meta: $proc.out.lines
               .race
@@ -86,6 +81,8 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
         }
     }
 
+    method !read-zef( --> Nil) { self!read-json($!zef-meta)  }
+    method !read-cpan(--> Nil) { self!read-json($!cpan-meta) }
     method !read-git(--> Nil) {
         indir $!git-meta, {
             my $proc := shell 'ls */*', :out;
@@ -136,13 +133,19 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
                 }
             }
 
-            my $path := %distribution<path>;
-            self!archive-distribution(
-              "$zef-base-url/$path",
-              %distribution<name>,
-              $identity,
-              extension($path)
-            );
+            my $json := $!zef-meta.add(%distribution<name>);
+            $json.mkdir;
+            $json := $json.add("$identity.json");
+            unless $json.e {
+                my $path := %distribution<path>;
+                self!archive-distribution(
+                  "$zef-base-url/$path",
+                  %distribution<name>,
+                  $identity,
+                  extension($path)
+                );
+                $json.spurt: to-json(%distribution, :!pretty);
+            }
 
             $identity => %distribution
         }
@@ -455,7 +458,7 @@ say $id if !%distribution<version> || $version ne %distribution<version>;
     method distro($identity) {
         my $io := $!shelves
           .add($identity.substr(0,1).uc)
-          .add($identity.split(':ver<').head)
+          .add($identity.substr(0,$identity.index(':ver<')))
           .add("$identity.tar.gz");
         $io.e ?? $io !! Nil
     }
@@ -721,6 +724,27 @@ Updates all the meta-information and downloads any new distributions.
 Returns a hash with the identities and the meta info of any distributions
 that were not seen before.  Also updates the C<.meta> and C<.modules>
 information in a thread-safe manner.
+
+=head2 zef-meta
+
+=begin code :lang<raku>
+
+indir $ea.zef-meta {
+    my $jsons = (shell 'ls */*', :out).out.lines.elems;
+    say "$jsons different distributions in the zef ecosystem";
+}
+
+=end code
+
+The C<IO> object of the directory in which the meta files of the zef
+ecosystem are being stored.  For instance the C<IRC::Client> distribution:
+
+  zef-meta
+    |- ...
+    |- IRC::Client
+        |- IRC::Client:ver<4.0.0>:auth<zef:lizmat>.json
+        |- ...
+    |- ...
 
 =head1 AUTHOR
 
