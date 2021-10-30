@@ -1,6 +1,6 @@
 .precomp/
 /archive
-/cpan-meta*
-/git-meta*
+/meta
 /releases/
 /Ecosystem-Archive-*
+/update

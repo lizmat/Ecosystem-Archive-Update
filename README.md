@@ -12,8 +12,8 @@ SYNOPSIS
 use Ecosystem::Archive;
 
 my $ea = Ecosystem::Archive.new(
-  archive     => 'archive',
-  cpan-meta   => 'cpan-meta',
+  shelves     => 'archive',
+  jsons       => 'meta',
   http-client => default-http-client
 );
 
@@ -29,56 +29,78 @@ Ecosystem::Archive provides the basic logic to the Raku Programming Language Eco
 ARGUMENTS
 ---------
 
-  * archive
+  * shelves
 
 The name (or an `IO` object) of a directory in which to place distributions. This is usually a symlink to the "archive" directory of the actual [Raku Ecosystem Archive repository](https://github.com/lizmat/REA). The default is 'archive', aka the 'archive' subdirectory from the current directory.
 
-  * cpan-meta
+  * jsons
 
-The name (or an `IO` object) of a directory in which to store `META6.json` files as downloaded from CPAN (and cleaned up). This is usually a symlink to the "cpan-meta" directory of the actual [Raku Ecosystem Archive repository](https://github.com/lizmat/REA). The default is 'cpan-meta', aka the 'cpan-meta' subdirectory from the current directory.
+The name (or an `IO` object) of a directory in which to store `META6.json` files as downloaded. This is usually a symlink to the "meta" directory of the actual [Raku Ecosystem Archive repository](https://github.com/lizmat/REA). The default is 'meta', aka the 'meta' subdirectory from the current directory.
 
   * http-client
 
 The `Cro::HTTP::Client` object to do downloads with. Defaults to a `Cro::HTTP::Client` object that advertises this module as its User-Agent.
 
+  * degree
+
+The number of CPU cores that may be used for parallel processing. Defaults to the **half** number of `Kernel.cpu-cores`.
+
+  * batch
+
+The number of objects to be processed in parallel per batch. Defaults to **64**.
+
 METHODS
 =======
 
-archive
--------
+batch
+-----
 
 ```raku
-say "$ea.archive.dir.elems() different modules in archive";
+say "Processing with batches of $ea.batch() objects in parallel";
 ```
 
-The `IO` object of the directory where distributions are being stored in a subdirectory by the name of the module in the distribution. For instance:
+The number of objects per batch that will be used in parallel processing.
 
-    archive
-     |- ...
-     |- silently
-         |- silently:ver<0.0.1>:auth<cpan:ELIZABETH>.tar.gz
-         |- silently:ver<0.0.2>:auth<cpan:ELIZABETH>.tar.gz
-         |- silently:ver<0.0.3>:auth<cpan:ELIZABETH>.tar.gz
-         |- silently:ver<0.0.4>:auth<zef:lizmat>.tar.gz
-     |- ...
-
-Note that a subdirectory will contain **all** distributions of the name, regardless of version, authority or API value.
-
-cpan-meta
----------
+clear-notes
+-----------
 
 ```raku
-say "$ea.cpan-meta.dir.elems() different CPAN distributions known";
+$ea.clear-notes;
+say "All notes have been cleared";
 ```
 
-The `IO` object of the directory in which the CPAN meta files are being stored. For instance:
+degree
+------
 
-    cpan-meta
-      |- ...
-      |- cpan-meta/ELIZABETH:silently-0.0.1.json
-      |- cpan-meta/ELIZABETH:silently-0.0.2.json
-      |- cpan-meta/ELIZABETH:silently-0.0.3.json
-      |- ...
+```raku
+say "Using $ea.degree() CPUs";
+```
+
+The number of CPU cores that will be used in parallel processing.
+
+distro
+------
+
+```raku
+my $identity = $ea.find-identities('eigenstates').head;
+say $ea.distro($identity);
+
+=end
+
+Returns an C<IO> object for the given identity, or C<Nil> if it can not be
+found.
+
+=head2 find-identities
+
+=begin code :lang<raku>
+
+my @identities = $ea.find-identities('eigenstates', :ver<0.0.3*>);
+say "@identities[0] is the most recent";
+```
+
+Find the identities that supply the given module name (as a positional parameter) and possible refinement with named parameters for `:ver`, `:auth` and `:api`. Note that the `:ver` specification can contain `+` or `*` to indicate a range rather than a single version.
+
+The identities will be returned sorted by highest version first. So if you're interested in only the most recent version, then just select the first element returned.
 
 http-client
 -----------
@@ -89,6 +111,49 @@ say "Information fetched as '$ea.http-client.user-agent()'";
 
 The `Cro::HTTP::Client` object that is used for downloading information from the Internet.
 
+investigate-repo
+----------------
+
+```raku
+my @found = $ea.investigate-repo($url, "lizmat");
+```
+
+Performs a `git clone` on the given URL, scans the repo for changes in the `META6.json` file that would change the version, and downloads and saves a tar-file of the repository (and the associated META information in `git-meta`) at that state of the repository.
+
+The second positional parameter indicates the default `auth` value to be applied to any JSON information, if no `auth` value is found or it is invalid.
+
+Only `Github` and `Gitlab` URLs are currently supported.
+
+Returns a list of `Pair`s of the distributions that were added, with the identity as the key, and the META information hash as the value.
+
+Updates the `.meta` and `.modules` meta-information in a thread-safe manner.
+
+jsons
+-----
+
+```raku
+indir $ea.jsons, {
+    my $jsons = (shell 'ls */*', :out).out.lines.elems;
+    say "$jsons different distributions";
+}
+```
+
+The `IO` object of the directory in which the JSON meta files are being stored. For instance the `IRC::Client` distribution:
+
+    meta
+      |- ...
+      |- I
+         |- ...
+         |- IRC::Client
+             |- IRC::Client:ver<1.001001>:auth<github:zoffixznet>.json
+             |- IRC::Client:ver<1.002001>:auth<github:zoffixznet>.json
+             |- ...
+             |- IRC::Client:ver<3.007010>:auth<github:zoffixznet>.json
+             |- IRC::Client:ver<3.007011>:auth<cpan:ELIZABETH>.json
+             |- IRC::Client:ver<3.009990>:auth<cpan:ELIZABETH>.json
+         |- ...
+      |- ...
+
 meta
 ----
 
@@ -97,7 +162,7 @@ say "Archive has $ea.meta.elems() identities, they are:";
 .say for $ea.meta.keys.sort;
 ```
 
-Returns a hash of all of the META information of all distributions, keyed by identity (for example "Module::Name:ver<0.1>:auth<foo:bar>:api<1>"). The value is a hash obtained from the distribution's metd data.
+Returns a hash of all of the META information of all distributions, keyed by identity (for example "Module::Name:ver<0.1>:auth<foo:bar>:api<1>"). The value is a hash obtained from the distribution's meta data.
 
 meta-as-json
 ------------
@@ -108,6 +173,61 @@ say $ea.meta-as-json;  # at least 3MB of text
 
 Returns the JSON of all the currently known meta-information.
 
+modules
+-------
+
+```raku
+say "Archive has $ea.modules.elems() different modules, they are:";
+.say for $ea.modules.keys.sort;
+```
+
+Returns a hash keyed by module name, with a list of identities that provide that module name, as value.
+
+note
+----
+
+```raku
+$ea.note("something's wrong");
+```
+
+Add a note to the `notes` of the object.
+
+notes
+-----
+
+```raku
+say "Found $ea.notes.elems() notes:";
+.say for $ea.notes;
+```
+
+Returns the `notes` of the object.
+
+shelves
+-------
+
+```raku
+indir $ea.shelves, {
+    my $distros = (shell 'ls */*', :out).out.lines.elems;
+    say "$distros different distributions in archive";
+}
+```
+
+The `IO` object of the directory where distributions are being stored in a subdirectory by the name of the module in the distribution. For instance the `silently` distribution:
+
+    archive
+     |- ...
+     |- S
+        |- ...
+        |- silently
+            |- silently:ver<0.0.1>:auth<cpan:ELIZABETH>.tar.gz
+            |- silently:ver<0.0.2>:auth<cpan:ELIZABETH>.tar.gz
+            |- silently:ver<0.0.3>:auth<cpan:ELIZABETH>.tar.gz
+            |- silently:ver<0.0.4>:auth<zef:lizmat>.tar.gz
+        |- ...
+     |- ...
+
+Note that a subdirectory will contain **all** distributions of the name, regardless of version, authority or API value.
+
 update
 ------
 
@@ -115,12 +235,7 @@ update
 my %updated = $ea.update;
 ```
 
-Updates all the meta-information and downloads any new distributions. Returns a hash with the identities and the meta info of any distributions that were not seen before.
-
-TODO
-====
-
-Add support for the old, git based ecosystem.
+Updates all the meta-information and downloads any new distributions. Returns a hash with the identities and the meta info of any distributions that were not seen before. Also updates the `.meta` and `.modules` information in a thread-safe manner.
 
 AUTHOR
 ======
