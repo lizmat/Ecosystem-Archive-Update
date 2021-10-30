@@ -84,16 +84,14 @@ distro
 ```raku
 my $identity = $ea.find-identities('eigenstates').head;
 say $ea.distro($identity);
+```
 
-=end
+Returns an `IO` object for the given identity, or `Nil` if it can not be found.
 
-Returns an C<IO> object for the given identity, or C<Nil> if it can not be
-found.
+find-identities
+---------------
 
-=head2 find-identities
-
-=begin code :lang<raku>
-
+```raku
 my @identities = $ea.find-identities('eigenstates', :ver<0.0.3*>);
 say "@identities[0] is the most recent";
 ```
@@ -241,6 +239,8 @@ AUTHOR
 ======
 
 Elizabeth Mattijsen <liz@raku.rocks>
+
+Source can be located at: https://github.com/lizmat/Ecosystem-Archive. Comments and Pull Requests are welcome.
 
 COPYRIGHT AND LICENSE
 =====================

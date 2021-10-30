@@ -634,7 +634,7 @@ The number of CPU cores that will be used in parallel processing.
 my $identity = $ea.find-identities('eigenstates').head;
 say $ea.distro($identity);
 
-=end
+=end code
 
 Returns an C<IO> object for the given identity, or C<Nil> if it can not be
 found.
@@ -823,6 +823,9 @@ information in a thread-safe manner.
 =head1 AUTHOR
 
 Elizabeth Mattijsen <liz@raku.rocks>
+
+Source can be located at: https://github.com/lizmat/Ecosystem-Archive.
+Comments and Pull Requests are welcome.
 
 =head1 COPYRIGHT AND LICENSE
 
