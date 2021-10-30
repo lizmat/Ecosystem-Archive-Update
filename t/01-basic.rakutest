@@ -1,7 +1,62 @@
 use Test;
 use Ecosystem::Archive;
 
-plan 1;
-pass "module loaded ok";
+plan 11;
+
+my $shelves := $*PROGRAM.sibling("archive");
+my $jsons   := $*PROGRAM.sibling("meta");
+
+ok $shelves.e, "do we have an archive to test with";
+ok $jsons.e,   "do we have a meta to test with";
+
+my $ea = Ecosystem::Archive.new(:$shelves, :$jsons);
+isa-ok $ea, Ecosystem::Archive;
+is $ea.shelves, $shelves, 'did we get the right archive dir';
+is $ea.jsons,   $jsons,   'did we get the right meta dir';
+
+is-deeply $ea.meta.keys.sort, <
+  P5study:ver<0.0.3>:auth<cpan:ELIZABETH>
+  P5study:ver<0.0.4>:auth<cpan:ELIZABETH>
+  P5study:ver<0.0.5>:auth<cpan:ELIZABETH>
+  P5study:ver<0.0.6>:auth<zef:lizmat>
+  eigenstates:ver<0.0.1>:auth<cpan:ELIZABETH>
+  eigenstates:ver<0.0.2>:auth<cpan:ELIZABETH>
+  eigenstates:ver<0.0.3>:auth<cpan:ELIZABETH>
+  eigenstates:ver<0.0.4>:auth<cpan:ELIZABETH>
+  eigenstates:ver<0.0.5>:auth<fez:lizmat>
+  eigenstates:ver<0.0.6>:auth<zef:lizmat>
+  eigenstates:ver<0.0.7>:auth<zef:lizmat>
+>, 'did we get the right meta';
+
+is-deeply $ea.modules, %(
+  P5study => <
+    P5study:ver<0.0.6>:auth<zef:lizmat>
+    P5study:ver<0.0.5>:auth<cpan:ELIZABETH>
+    P5study:ver<0.0.4>:auth<cpan:ELIZABETH>
+    P5study:ver<0.0.3>:auth<cpan:ELIZABETH>
+  >,
+  eigenstates => <
+    eigenstates:ver<0.0.7>:auth<zef:lizmat>
+    eigenstates:ver<0.0.6>:auth<zef:lizmat>
+    eigenstates:ver<0.0.5>:auth<fez:lizmat>
+    eigenstates:ver<0.0.4>:auth<cpan:ELIZABETH>
+    eigenstates:ver<0.0.3>:auth<cpan:ELIZABETH>
+    eigenstates:ver<0.0.2>:auth<cpan:ELIZABETH>
+    eigenstates:ver<0.0.1>:auth<cpan:ELIZABETH>
+  >
+), 'did we get the right modules';
+
+is-deeply $ea.find-identities('foobar'), Empty, 'did we not find foobar';
+is-deeply $ea.find-identities('P5study'), <
+    P5study:ver<0.0.6>:auth<zef:lizmat>
+    P5study:ver<0.0.5>:auth<cpan:ELIZABETH>
+    P5study:ver<0.0.4>:auth<cpan:ELIZABETH>
+    P5study:ver<0.0.3>:auth<cpan:ELIZABETH>
+>, 'did we find P5study in correct order';
+
+my $io := $ea.distro('P5study:ver<0.0.6>:auth<zef:lizmat>');
+isa-ok $io, IO::Path, 'Did we get an IO::Path for the distro';
+is $io.basename, 'P5study:ver<0.0.6>:auth<zef:lizmat>.tar.gz',
+  'is the name of the distro file ok';
 
 # vim: expandtab shiftwidth=4

@@ -99,6 +99,12 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
                     %modules.push($_, $identity) for %provides.keys;
                 }
             }
+
+            for %modules.kv -> $module, @identities {
+                %modules{$module} := @identities.sort({
+                    .match(/ ':ver<' <( <-[>]>+ /).Str.Version;
+                }).reverse.List
+            }
             %!meta    := %meta;
             %!modules := %modules;
         }
@@ -498,7 +504,7 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
                 }
             }
 
-            @identities.sort(*.match(regex)).reverse
+            @identities
         }
     }
 
