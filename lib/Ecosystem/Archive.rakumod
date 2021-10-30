@@ -52,6 +52,22 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
         "https://gitlab.com/$user/$repo/-/archive/$tag/$repo-$tag.tar.gz"
     }
 
+    # Return substring that is between two given strings in a string
+    my sub between(str $string, str $before, str $after) {
+        with $string.index($before) -> int $left {
+            with $string.index($after, $left) -> int $right {
+                my int $offset = $left + $before.chars;
+                $string.substr($offset, $right - $offset)
+            }
+            else {
+                $string
+            }
+        }
+        else {
+            $string
+        }
+    }
+
     method TWEAK(--> Nil) {
         $!jsons     := $!jsons.IO;
         $!shelves   := $!shelves.IO;
@@ -100,9 +116,9 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
                 }
             }
 
-            for %modules.kv -> $module, @identities {
-                %modules{$module} := @identities.sort({
-                    .match(/ ':ver<' <( <-[>]>+ /).Str.Version;
+            for %modules.kv -> $module, \identities {
+                %modules{$module} := identities.sort({
+                    between($_, ':ver<', '>').Version
                 }).reverse.List
             }
             %!meta    := %meta;
