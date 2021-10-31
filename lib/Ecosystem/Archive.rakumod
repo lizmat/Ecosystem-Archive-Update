@@ -109,17 +109,22 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
         $!meta-lock.protect: {
             my %meta    := %!meta.clone;
             my %modules := %!modules.clone;
+            my %updated;
             for updates -> (:key($identity), :value(%distribution)) {
                 %meta{$identity} := %distribution;
                 if %distribution<provides> -> %provides {
-                    %modules.push($_, $identity) for %provides.keys;
+                    for %provides.keys {
+                        (%modules{$_} // (%modules{$_} := my str @))
+                          .push($identity);
+                        %updated{$_}++;
+                    }
                 }
             }
 
-            for %modules.kv -> $module, \identities {
-                %modules{$module} := identities.sort({
+            for %updated.keys -> $module {
+                %modules{$module} := my str @ = %modules{$module}.sort( {
                     between($_, ':ver<', '>').Version
-                }).reverse.List
+                }).reverse;
             }
             %!meta    := %meta;
             %!modules := %modules;

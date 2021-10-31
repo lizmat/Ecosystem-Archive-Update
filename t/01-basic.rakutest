@@ -29,13 +29,13 @@ is-deeply $ea.meta.keys.sort, <
 >, 'did we get the right meta';
 
 is-deeply $ea.modules, %(
-  P5study => <
+  P5study => (my str @ = <
     P5study:ver<0.0.6>:auth<zef:lizmat>
     P5study:ver<0.0.5>:auth<cpan:ELIZABETH>
     P5study:ver<0.0.4>:auth<cpan:ELIZABETH>
     P5study:ver<0.0.3>:auth<cpan:ELIZABETH>
-  >,
-  eigenstates => <
+  >),
+  eigenstates => (my str @ = <
     eigenstates:ver<0.0.7>:auth<zef:lizmat>
     eigenstates:ver<0.0.6>:auth<zef:lizmat>
     eigenstates:ver<0.0.5>:auth<fez:lizmat>
@@ -43,16 +43,16 @@ is-deeply $ea.modules, %(
     eigenstates:ver<0.0.3>:auth<cpan:ELIZABETH>
     eigenstates:ver<0.0.2>:auth<cpan:ELIZABETH>
     eigenstates:ver<0.0.1>:auth<cpan:ELIZABETH>
-  >
+  >)
 ), 'did we get the right modules';
 
 is-deeply $ea.find-identities('foobar'), Empty, 'did we not find foobar';
-is-deeply $ea.find-identities('P5study'), <
+is-deeply $ea.find-identities('P5study'), (my str @ = <
     P5study:ver<0.0.6>:auth<zef:lizmat>
     P5study:ver<0.0.5>:auth<cpan:ELIZABETH>
     P5study:ver<0.0.4>:auth<cpan:ELIZABETH>
     P5study:ver<0.0.3>:auth<cpan:ELIZABETH>
->, 'did we find P5study in correct order';
+>), 'did we find P5study in correct order';
 
 my $io := $ea.distro('P5study:ver<0.0.6>:auth<zef:lizmat>');
 isa-ok $io, IO::Path, 'Did we get an IO::Path for the distro';
