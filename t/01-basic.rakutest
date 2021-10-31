@@ -1,7 +1,7 @@
 use Test;
 use Ecosystem::Archive;
 
-plan 11;
+plan 24;
 
 my $shelves := $*PROGRAM.sibling("archive");
 my $jsons   := $*PROGRAM.sibling("meta");
@@ -28,7 +28,7 @@ is-deeply $ea.meta.keys.sort, <
   eigenstates:ver<0.0.7>:auth<zef:lizmat>
 >, 'did we get the right meta';
 
-is-deeply $ea.modules, %(
+is-deeply $ea.modules, Map.new((
   P5study => (my str @ = <
     P5study:ver<0.0.6>:auth<zef:lizmat>
     P5study:ver<0.0.5>:auth<cpan:ELIZABETH>
@@ -44,19 +44,59 @@ is-deeply $ea.modules, %(
     eigenstates:ver<0.0.2>:auth<cpan:ELIZABETH>
     eigenstates:ver<0.0.1>:auth<cpan:ELIZABETH>
   >)
-), 'did we get the right modules';
+)), 'did we get the right modules';
 
-is-deeply $ea.find-identities('foobar'), Empty, 'did we not find foobar';
-is-deeply $ea.find-identities('P5study'), (my str @ = <
+is-deeply $ea.find-identities('foobar'), (), 'did we not find foobar';
+is-deeply $ea.find-identities('P5study'), <
     P5study:ver<0.0.6>:auth<zef:lizmat>
     P5study:ver<0.0.5>:auth<cpan:ELIZABETH>
     P5study:ver<0.0.4>:auth<cpan:ELIZABETH>
     P5study:ver<0.0.3>:auth<cpan:ELIZABETH>
->), 'did we find P5study in correct order';
+>, 'did we find P5study in correct order';
+is-deeply $ea.find-identities('P5study', :ver("0.0.4")), (<
+    P5study:ver<0.0.4>:auth<cpan:ELIZABETH>
+>,), 'did we find P5study:ver<0.0.4>';
+is-deeply $ea.find-identities('P5study', :ver("0.0.4+")), <
+    P5study:ver<0.0.6>:auth<zef:lizmat>
+    P5study:ver<0.0.5>:auth<cpan:ELIZABETH>
+>, 'did we find P5study:ver<0.0.4+>';
+is-deeply $ea.find-identities('P5study', :ver("0.0.4*")), <
+    P5study:ver<0.0.6>:auth<zef:lizmat>
+    P5study:ver<0.0.5>:auth<cpan:ELIZABETH>
+    P5study:ver<0.0.4>:auth<cpan:ELIZABETH>
+>, 'did we find P5study:ver<0.0.4*>';
+is-deeply $ea.find-identities('P5study', :ver("0.0.4"), :auth<cpan:ELIZABETH>),
+  (<
+    P5study:ver<0.0.4>:auth<cpan:ELIZABETH>
+  >,),
+  'did we find P5study:ver<0.0.4>:auth<cpan:ELIZABETH>';
+is-deeply $ea.find-identities('P5study', :ver("0.0.4"), :auth<zef:lizmat>),
+  (),
+  'did we not find P5study:ver<0.0.4>:auth<zef:lizmat>';
+is-deeply $ea.find-identities('P5study', :auth<cpan:ELIZABETH>), <
+    P5study:ver<0.0.5>:auth<cpan:ELIZABETH>
+    P5study:ver<0.0.4>:auth<cpan:ELIZABETH>
+    P5study:ver<0.0.3>:auth<cpan:ELIZABETH>
+>, 'did we find P5study:auth<cpan:ELIZABETH> in correct order';
+
+# Since hashes have indeterminate order, it's hard to compare the
+# resulting JSON.  But in whichever order it is rendered, the total
+# length of the JSON should be always the same for the test set.
+is $ea.meta-as-json.chars, 5178, 'did we get correct json data';
 
 my $io := $ea.distro('P5study:ver<0.0.6>:auth<zef:lizmat>');
 isa-ok $io, IO::Path, 'Did we get an IO::Path for the distro';
 is $io.basename, 'P5study:ver<0.0.6>:auth<zef:lizmat>.tar.gz',
   'is the name of the distro file ok';
+
+$ea.note: "foo";
+is $ea.notes.elems, 1, 'did the first note get added';
+$ea.note: "bar";
+is $ea.notes.elems, 2, 'did the second note get added';
+$ea.note: "baz";
+is $ea.notes.elems, 3, 'did the third note get added';
+is-deeply $ea.notes, <foo bar baz>, 'did we get all the notes';
+is-deeply $ea.clear-notes, <foo bar baz>, 'did we get all the notes cleared';
+is $ea.notes.elems, 0, 'were all notes really cleared';
 
 # vim: expandtab shiftwidth=4

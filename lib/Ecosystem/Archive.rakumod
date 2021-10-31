@@ -9,9 +9,9 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
     has $.degree       is built(:bind) = Kernel.cpu-cores / 2;
     has $.batch        is built(:bind) = 64;
     has %.meta         is built(False);
-    has %.modules      is built(False);
     has $.meta-as-json is built(False);
-    has @.notes        is built(False);
+    has %!modules;
+    has @!notes;
     has $!meta-lock;
     has $!note-lock;
 
@@ -60,11 +60,11 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
                 $string.substr($offset, $right - $offset)
             }
             else {
-                $string
+                Nil
             }
         }
         else {
-            $string
+            Nil
         }
     }
 
@@ -87,13 +87,21 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
                 Empty
             }
         }
+        self!update-meta-as-json;
     }
 
     method note($message --> Nil) {
         $!note-lock.protect: { @!notes.push: $message }
     }
-    method clear-notes(--> Nil) {
-        $!note-lock.protect: { @!notes = () }
+    method notes() {
+        $!note-lock.protect: { @!notes.List }
+    }
+    method clear-notes() {
+        $!note-lock.protect: {
+            my @notes is List = @!notes;
+            @!notes = ();
+            @notes
+        }
     }
 
     method !update(--> Nil) {
@@ -499,33 +507,38 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
         @added
     }
 
+    method modules() { %!modules.Map }
     method find-identities($name, :$ver, :$auth, :$api) {
-        my constant regex = / ':ver<' <( <-[>]>+ )> /;
 
-        with %!modules{$name} -> @identities {
-            with $auth {
-                my $needle  := ":auth<$auth>";
-                @identities .= grep(*.contains($needle));
-            }
-            with $api {
-                if $api ne '0' {
-                    my $needle  := ":api<$api>";
-                    @identities .= grep(*.contains($needle));
-                }
-            }
-            with $ver {
-                if $ver ne '*' {
-                    my $version := $ver.Version;
-                    my &op := $ver.contains("+" | "*")
+        if $ver || $auth || $api {
+            with %!modules{$name} -> str @identities {
+                my $auth-needle := $auth ?? ":auth<$auth>" !! "";
+                my $api-needle  := $api && $api ne '0' ?? ":api<$api>" !! "";
+                my $version;
+                my &comp;
+                if $ver && $ver ne '*' {
+                    $version := $ver.Version;
+                    &comp = $ver.contains("+" | "*")
                       ?? &infix:«>»
                       !! &infix:«==»;
-                    @identities .= grep: {
-                        op .match(regex).Str.Version, $version
-                    }
+                }
+
+                @identities.grep: {
+                    (!$auth-needle || .contains($auth-needle))
+                      &&
+                    (!$api-needle || .contains($api-needle))
+                      && 
+                    (!&comp || comp(.&between(':ver<', '>').Version, $version))
                 }
             }
-
-            @identities
+        }
+        else {
+            with %!modules{$name} {
+                .List
+            }
+            else {
+                ()
+            }
         }
     }
 
@@ -617,10 +630,13 @@ The number of objects per batch that will be used in parallel processing.
 
 =begin code :lang<raku>
 
-$ea.clear-notes;
+my @cleared = $ea.clear-notes;
 say "All notes have been cleared";
 
 =end code
+
+Returns the C<notes> of the object as a C<List>, and removes them from the
+object.
 
 =head2 degree
 
@@ -758,7 +774,7 @@ say "Archive has $ea.modules.elems() different modules, they are:";
 
 =end code
 
-Returns a hash keyed by module name, with a list of identities that
+Returns a C<Map> keyed by module name, with a list of identities that
 provide that module name, as value.
 
 =head2 note
@@ -780,7 +796,7 @@ say "Found $ea.notes.elems() notes:";
 
 =end code
 
-Returns the C<notes> of the object.
+Returns the C<notes> of the object as a C<List>.
 
 =head2 shelves
 
