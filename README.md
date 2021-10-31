@@ -65,9 +65,11 @@ clear-notes
 -----------
 
 ```raku
-$ea.clear-notes;
+my @cleared = $ea.clear-notes;
 say "All notes have been cleared";
 ```
+
+Returns the `notes` of the object as a `List`, and removes them from the object.
 
 degree
 ------
@@ -169,7 +171,7 @@ meta-as-json
 say $ea.meta-as-json;  # at least 3MB of text
 ```
 
-Returns the JSON of all the currently known meta-information.
+Returns the JSON of all the currently known meta-information. The JSON is ordered by identity in the top level array.
 
 modules
 -------
@@ -179,7 +181,7 @@ say "Archive has $ea.modules.elems() different modules, they are:";
 .say for $ea.modules.keys.sort;
 ```
 
-Returns a hash keyed by module name, with a list of identities that provide that module name, as value.
+Returns a `Map` keyed by module name, with a list of identities that provide that module name, as value.
 
 note
 ----
@@ -198,7 +200,7 @@ say "Found $ea.notes.elems() notes:";
 .say for $ea.notes;
 ```
 
-Returns the `notes` of the object.
+Returns the `notes` of the object as a `List`.
 
 shelves
 -------

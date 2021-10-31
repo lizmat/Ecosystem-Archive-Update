@@ -9,11 +9,11 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
     has $.degree       is built(:bind) = Kernel.cpu-cores / 2;
     has $.batch        is built(:bind) = 64;
     has %.meta         is built(False);
-    has $.meta-as-json is built(False);
-    has %!modules;
-    has @!notes;
-    has $!meta-lock;
-    has $!note-lock;
+    has str  $!meta-as-json = "";
+    has      %!modules;
+    has      @!notes;
+    has Lock $!meta-lock;
+    has Lock $!note-lock;
 
     sub default-http-client() {
         Cro::HTTP::Client.new(
@@ -87,7 +87,6 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
                 Empty
             }
         }
-        self!update-meta-as-json;
     }
 
     method note($message --> Nil) {
@@ -110,7 +109,6 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
           (start self!update-cpan),
           (start self!update-zef),
         ;
-        self!update-meta-as-json;
     }
 
     method !update-meta(\updates --> Nil) {
@@ -129,13 +127,16 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
                 }
             }
 
-            for %updated.keys -> $module {
-                %modules{$module} := my str @ = %modules{$module}.sort( {
-                    between($_, ':ver<', '>').Version
-                }).reverse;
+            if %updated {
+                for %updated.keys -> $module {
+                    %modules{$module} := my str @ = %modules{$module}.sort( {
+                        .&between(':ver<', '>').Version
+                    }).reverse;
+                }
+                %!meta    := %meta;
+                %!modules := %modules;
+                $!meta-as-json = "";
             }
-            %!meta    := %meta;
-            %!modules := %modules;
         }
     }
 
@@ -400,8 +401,13 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
         }
     }
 
-    method !update-meta-as-json() {
-        $!meta-as-json := to-json(%!meta.sort(*.key).map(*.value), :!pretty)
+    method meta-as-json() {
+        $!meta-lock.protect: {
+            $!meta-as-json
+              ?? $!meta-as-json
+              !! $!meta-as-json =
+                   to-json(%!meta.sort(*.key).map(*.value), :!pretty)
+        }
     }
 
     # Archive distribution, return whether JSON should be updated
@@ -763,7 +769,8 @@ say $ea.meta-as-json;  # at least 3MB of text
 
 =end code
 
-Returns the JSON of all the currently known meta-information.
+Returns the JSON of all the currently known meta-information.  The
+JSON is ordered by identity in the top level array.
 
 =head2 modules
 
