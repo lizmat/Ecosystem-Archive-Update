@@ -2,7 +2,7 @@ use Cro::HTTP::Client:ver<0.8.6>;
 use JSON::Fast:ver<0.16>;
 use paths:ver<10.0.2>:auth<zef:lizmat>;
 
-class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
+class Ecosystem::Archive:ver<0.0.2>:auth<zef:lizmat> {
     has $.shelves      is built(:bind) = 'archive';
     has $.jsons        is built(:bind) = 'meta';
     has $.http-client  is built(:bind) = default-http-client;
@@ -380,7 +380,7 @@ class Ecosystem::Archive:ver<0.0.1>:auth<zef:lizmat> {
                                       )
                                 }) {
                                     $json.spurt(to-json %distribution,:!pretty);
-                                    $result := $name => %distribution  # NEW!
+                                    $result := $identity => %distribution # NEW!
                                 }
                             }
 

@@ -2,5 +2,8 @@ Revision history for Ecosystem-Archive
 
 {{$NEXT}}
 
+0.0.2  2021-11-01T19:45:31+01:00
+    - Fix issues with updating of meta on new releases
+
 0.0.1  2021-10-31T22:29:25+01:00
     - Initial version
