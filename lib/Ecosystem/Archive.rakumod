@@ -2,18 +2,51 @@ use Cro::HTTP::Client:ver<0.8.6>;
 use JSON::Fast:ver<0.16>;
 use paths:ver<10.0.2>:auth<zef:lizmat>;
 
-class Ecosystem::Archive:ver<0.0.2>:auth<zef:lizmat> {
+sub identity2module($identity) is export {
+    with $identity.index(':ver<') {
+        $identity.substr(0, $_)
+    }
+    else {
+        $identity
+    }
+}
+
+class Ecosystem::Archive:ver<0.0.3>:auth<zef:lizmat> {
     has $.shelves      is built(:bind) = 'archive';
     has $.jsons        is built(:bind) = 'meta';
     has $.http-client  is built(:bind) = default-http-client;
-    has $.degree       is built(:bind) = Kernel.cpu-cores / 2;
-    has $.batch        is built(:bind) = 64;
+    has $.degree       is built(:bind);
+    has $.batch        is built(:bind);
     has %.meta         is built(False);
     has str  $!meta-as-json = "";
     has      %!modules;
     has      @!notes;
     has Lock $!meta-lock;
     has Lock $!note-lock;
+
+    method TWEAK(--> Nil) {
+        $!jsons     := $!jsons.IO;
+        $!shelves   := $!shelves.IO;
+        $!meta-lock := Lock.new;
+        $!note-lock := Lock.new;
+
+        $!degree := Kernel.cpu-cores / 2 without $!degree;
+        $!batch  := 64                   without $!batch;
+
+        self!update-meta: paths($!jsons, :file(*.ends-with('.json')))
+          .race(:$!degree, :$!batch)
+          .map: -> $path {
+            my $io           := $path.IO;
+            my %distribution := from-json $path.IO.slurp;
+            with %distribution<dist> -> $identity {
+                $identity => %distribution
+            }
+            else {
+                self.note: "No identity found in $path.IO.basename.chop(5)";
+                Empty
+            }
+        }
+    }
 
     sub default-http-client() {
         Cro::HTTP::Client.new(
@@ -65,27 +98,6 @@ class Ecosystem::Archive:ver<0.0.2>:auth<zef:lizmat> {
         }
         else {
             Nil
-        }
-    }
-
-    method TWEAK(--> Nil) {
-        $!jsons     := $!jsons.IO;
-        $!shelves   := $!shelves.IO;
-        $!meta-lock := Lock.new;
-        $!note-lock := Lock.new;
-
-        self!update-meta: paths($!jsons)
-          .race(:$!degree, :$!batch)
-          .map: -> $path {
-            my $io           := $path.IO;
-            my %distribution := from-json $path.IO.slurp;
-            with %distribution<dist> -> $identity {
-                $identity => %distribution
-            }
-            else {
-                self.note: "No identity found in $path.IO.basename.chop(5)";
-                Empty
-            }
         }
     }
 
@@ -847,6 +859,18 @@ Updates all the meta-information and downloads any new distributions.
 Returns a hash with the identities and the meta info of any distributions
 that were not seen before.  Also updates the C<.meta> and C<.modules>
 information in a thread-safe manner.
+
+=head1 EXPORTED SUBROUTINES
+
+=head2 identity2module
+
+=begin code :lang<raku>
+
+say identity2module("zef:ver<0.1.1>:auth<zef:ugexe>");  # zef
+
+=end code
+
+Returns the module of a given identity.
 
 =head1 AUTHOR
 

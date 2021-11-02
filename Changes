@@ -2,6 +2,13 @@ Revision history for Ecosystem-Archive
 
 {{$NEXT}}
 
+0.0.3  2021-11-03T00:47:29+01:00
+    - Export helper sub identity2module
+    - Allow undefined values for degree / batch as
+      indication of using the default, to make it easier
+      to use in scripts.
+    - Make sure only .json files are read from the REA
+
 0.0.2  2021-11-01T19:45:31+01:00
     - Fix issues with updating of meta on new releases
 

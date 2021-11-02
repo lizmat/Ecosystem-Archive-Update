@@ -237,6 +237,18 @@ my %updated = $ea.update;
 
 Updates all the meta-information and downloads any new distributions. Returns a hash with the identities and the meta info of any distributions that were not seen before. Also updates the `.meta` and `.modules` information in a thread-safe manner.
 
+EXPORTED SUBROUTINES
+====================
+
+identity2module
+---------------
+
+```raku
+say identity2module("zef:ver<0.1.1>:auth<zef:ugexe>");  # zef
+```
+
+Returns the module of a given identity.
+
 AUTHOR
 ======
 
