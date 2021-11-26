@@ -6,9 +6,10 @@
   "build-depends": [
   ],
   "depends": [
-    "Cro::HTTP:ver<0.8.6>",
+    "Cro::HTTP:ver<0.8.7>",
     "JSON::Fast:ver<0.16>",
-    "paths:ver<10.0.2>:auth<zef:lizmat>"
+    "paths:ver<10.0.2>:auth<zef:lizmat>",
+    "Rakudo::CORE::META:ver<0.0.3>:auth<zef:lizmat>"
   ],
   "description": "Interface to the Raku Ecosystem Archive",
   "license": "Artistic-2.0",
@@ -24,5 +25,5 @@
   ],
   "test-depends": [
   ],
-  "version": "0.0.3"
+  "version": "0.0.4"
 }

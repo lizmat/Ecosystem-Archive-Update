@@ -14,7 +14,7 @@ isa-ok $ea, Ecosystem::Archive;
 is $ea.shelves, $shelves, 'did we get the right archive dir';
 is $ea.jsons,   $jsons,   'did we get the right meta dir';
 
-is-deeply $ea.meta.keys.sort, <
+is-deeply $ea.meta.keys.grep(!*.starts-with("CORE:")).sort, <
   P5study:ver<0.0.3>:auth<cpan:ELIZABETH>
   P5study:ver<0.0.4>:auth<cpan:ELIZABETH>
   P5study:ver<0.0.5>:auth<cpan:ELIZABETH>
@@ -28,7 +28,10 @@ is-deeply $ea.meta.keys.sort, <
   eigenstates:ver<0.0.7>:auth<zef:lizmat>
 >, 'did we get the right meta';
 
-is-deeply $ea.modules, Map.new((
+# Filter out whatever CORE modules are in there
+my %modules := Map.new(($ea.modules.grep(!*.value.head.starts-with('CORE:'))));
+
+is-deeply %modules, Map.new((
   P5study => (my str @ = <
     P5study:ver<0.0.6>:auth<zef:lizmat>
     P5study:ver<0.0.5>:auth<cpan:ELIZABETH>
@@ -82,9 +85,9 @@ is-deeply $ea.find-identities('P5study', :auth<cpan:ELIZABETH>), <
 # Since hashes have indeterminate order, it's hard to compare the
 # resulting JSON.  But in whichever order it is rendered, the total
 # length of the JSON should be always the same for the test set.
-is $ea.meta-as-json.chars, 5178, 'did we get correct json data';
+is $ea.meta-as-json.chars, 6250, 'did we get correct json data';
 
-my $io := $ea.distro('P5study:ver<0.0.6>:auth<zef:lizmat>');
+my $io := $ea.distro-io('P5study:ver<0.0.6>:auth<zef:lizmat>');
 isa-ok $io, IO::Path, 'Did we get an IO::Path for the distro';
 is $io.basename, 'P5study:ver<0.0.6>:auth<zef:lizmat>.tar.gz',
   'is the name of the distro file ok';

@@ -80,15 +80,25 @@ say "Using $ea.degree() CPUs";
 
 The number of CPU cores that will be used in parallel processing.
 
-distro
-------
+distro-io
+---------
 
 ```raku
 my $identity = $ea.find-identities('eigenstates').head;
-say $ea.distro($identity);
+say $ea.distro-io($identity);
 ```
 
 Returns an `IO` object for the given identity, or `Nil` if it can not be found.
+
+distros
+-------
+
+```raku
+say "Archive has $ea.distros.elems() different distributions, they are:";
+.say for $ea.distros.keys.sort;
+```
+
+Returns a `Map` keyed by distribution name, with a list of identities that are available of this distribution, as value.
 
 find-identities
 ---------------

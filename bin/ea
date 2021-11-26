@@ -1,0 +1,14 @@
+my %*SUB-MAIN-OPTS = :named-anywhere;
+
+use Ecosystem::Archive;
+
+multi sub MAIN("find", $module, :$ver, :$auth, :$api) {
+    my $ea := Ecosystem::Archive.new;
+    if $ea.find-identities($module) -> @identities {
+        .say for @identities;
+    }
+    else {
+        exit note "No identities found for '$module'";
+    }
+}
+
