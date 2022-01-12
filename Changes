@@ -2,6 +2,12 @@ Revision history for Ecosystem-Archive
 
 {{$NEXT}}
 
+0.0.5  2022-01-12T21:26:38+01:00
+    - Add dependency on Identity::Utils
+    - Add "force-json" option on update
+    - Generate download URL in "source-url" field in META
+    - Generate any JSON with sorted keys, for easier debugging
+
 0.0.4  2021-11-26T21:33:20+01:00
     - Add support for "distros"
     - Add dependency to Rakudo::META::CORE to be able to

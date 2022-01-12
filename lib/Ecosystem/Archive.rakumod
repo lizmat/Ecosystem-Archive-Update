@@ -2,6 +2,7 @@ use Cro::HTTP::Client:ver<0.8.7>;
 use JSON::Fast:ver<0.16>;
 use paths:ver<10.0.2>:auth<zef:lizmat>;
 use Rakudo::CORE::META:ver<0.0.3>:auth<zef:lizmat>;
+use Identity::Utils:ver<0.0.4>:auth<zef:lizmat>;
 
 sub identity2module($identity) is export {
     with $identity.index(':ver<') {
@@ -17,7 +18,7 @@ sub distribution-from-io($io) { from-json $io.slurp } # , :immutable }
 
 # Store given distribution at given io
 sub distribution-to-io(%distribution, $io) {
-    $io.spurt: to-json %distribution, :!pretty
+    $io.spurt: to-json %distribution, :!pretty, :sorted-keys
 }
 
 # Parsing JSON from text may get garbage, and may need adaptations
@@ -26,7 +27,7 @@ sub distribution-to-io(%distribution, $io) {
 # version
 sub distribution-from-text($text) { try from-json $text }
 
-class Ecosystem::Archive:ver<0.0.4>:auth<zef:lizmat> {
+class Ecosystem::Archive:ver<0.0.5>:auth<zef:lizmat> {
     has $.shelves      is built(:bind);
     has $.jsons        is built(:bind);
     has $.degree       is built(:bind);
@@ -114,6 +115,11 @@ class Ecosystem::Archive:ver<0.0.4>:auth<zef:lizmat> {
     sub gitlab-download-URL($user, $repo, $tag = 'master') {
         "https://gitlab.com/$user/$repo/-/archive/$tag/$repo-$tag.tar.gz"
     }
+    sub rea-download-URL($name, $identity, $extension) {
+        'https://raw.githubusercontent.com/raku/REA/main/archive/' ~
+          "$name.substr(0,1).uc()/$name/$identity$extension"
+          .subst('<','%3C',:g).subst('>','%3E',:g)
+    }
 
     # Return substring that is between two given strings in a string
     my sub between(str $string, str $before, str $after) {
@@ -145,11 +151,11 @@ class Ecosystem::Archive:ver<0.0.4>:auth<zef:lizmat> {
         }
     }
 
-    method !update(--> Nil) {
+    method !update($force-json --> Nil) {
         await
-          (start self!update-git),
-          (start self!update-cpan),
-          (start self!update-zef),
+          (start self!update-git($force-json)),
+          (start self!update-cpan($force-json)),
+          (start self!update-zef($force-json)),
         ;
     }
 
@@ -207,7 +213,7 @@ class Ecosystem::Archive:ver<0.0.4>:auth<zef:lizmat> {
         $io.add("$file.json")
     }
 
-    method !update-zef(--> Nil) {
+    method !update-zef($force-json --> Nil) {
         my $resp := await $!http-client.get('https://360.zef.pm');
         self!update-meta: (await $resp.body)
           .race(:$!degree, :$!batch)
@@ -220,9 +226,14 @@ class Ecosystem::Archive:ver<0.0.4>:auth<zef:lizmat> {
                 }
             }
 
+            my $path := %distribution<path>:delete;
+            %distribution<source-url> :=
+              rea-download-URL %distribution<name>,$identity,extension($path);
             my $json := self!make-json-io(%distribution<name>, $identity);
-            unless $json.e {
-                my $path := %distribution<path>;
+            if $json.e {
+                distribution-to-io(%distribution, $json) if $force-json;
+            }
+            else {
                 self!archive-distribution(
                   "$zef-base-url/$path",
                   %distribution<name>,
@@ -236,7 +247,7 @@ class Ecosystem::Archive:ver<0.0.4>:auth<zef:lizmat> {
         }
     }
 
-    method !update-cpan(--> Nil) {
+    method !update-cpan($force-json --> Nil) {
         my @includes = BEGIN @extensions.map: {  # my constant @ dies
             '--include="/id/*/*/*/Perl6/*' ~ $_ ~ '"'
         }
@@ -253,7 +264,7 @@ class Ecosystem::Archive:ver<0.0.4>:auth<zef:lizmat> {
           'cpan-rsync.perl.org::CPAN/authors/id', 'CPAN';
 
         # Hash with additional META info, keyed on CPAN ID + distro name
-        my %new;
+        my %valid;
 
         # Interrogate CPAN
         my $proc := shell @command, :out;
@@ -326,16 +337,19 @@ class Ecosystem::Archive:ver<0.0.4>:auth<zef:lizmat> {
 
                             # Make sure we have a matching identity in the
                             # META information.
-                            %distribution<dist> := build-identity(
-                              $name,
-                              $version,
-                              %distribution<auth>,
-                              %distribution<api>
-                            );
+                            my $identity :=
+                              %distribution<dist> := build-identity(
+                                $name,
+                                $version,
+                                %distribution<auth>,
+                                %distribution<api>
+                              );
 
                             # Set up META for later confirmation with
                             # actual tar file.
-                            %new{$id} := %distribution;
+                            %distribution<source-url> :=
+                              rea-download-URL $name,$identity,extension($path);
+                            %valid{$id} := %distribution;
                         }
                         else {
                             self.note: "$id has no name in META";
@@ -351,7 +365,7 @@ class Ecosystem::Archive:ver<0.0.4>:auth<zef:lizmat> {
             }
 
             # Not meta, so distribution info of which we should have seen meta
-            elsif %new{$id} -> %distribution {
+            elsif %valid{$id} -> %distribution {
                 my $name     := %distribution<name>;
                 my $identity := %distribution<dist>;
                 my $json     := self!make-json-io($name, $identity);
@@ -361,9 +375,13 @@ class Ecosystem::Archive:ver<0.0.4>:auth<zef:lizmat> {
                 ) {
                     distribution-to-io(%distribution, $json)
                 }
+                elsif $force-json {
+dd %distribution<source-url>;
+                    distribution-to-io(%distribution, $json)
+                }
                 else {
                     self.note: "Could not get archive for $id";
-                    %new{$id}:delete;
+                    %valid{$id}:delete;
                 }
             }
             else {
@@ -372,12 +390,12 @@ class Ecosystem::Archive:ver<0.0.4>:auth<zef:lizmat> {
         }
 
         # Make sure the meta info is ok
-        self!update-meta: %new.values.map: -> %distribution {
+        self!update-meta: %valid.values.map: -> %distribution {
             %distribution<dist> => %distribution
         }
     }
 
-    method !update-git(--> Nil) {
+    method !update-git($force-json --> Nil) {
         my $resp := await $!http-client.get:
           'https://raw.githubusercontent.com/Raku/ecosystem/master/META.list';
         my $text := await $resp.body;
@@ -430,11 +448,17 @@ class Ecosystem::Archive:ver<0.0.4>:auth<zef:lizmat> {
                                 }
 
                                 my $json := self!make-json-io($name, $identity);
-                                unless $json.e {
+                                %distribution<source-url> :=
+                                  rea-download-URL $name, $identity, '.tar.gz';
+                                if $json.e {
+                                    distribution-to-io(%distribution,$json)
+                                      if $force-json;
+                                }
 # Since we cannot determine easily what the default branch is of a repo, we
 # just try the ones that we know are being used in the ecosystem in order of
 # likeliness to succeed, and write the meta info as soon as we could download
 # a tar file.
+                                else {
                                     if <master main dev>.first(-> $branch {
                                           try self!archive-distribution(
                                             ::("&$base\-download-URL")(
@@ -471,10 +495,8 @@ class Ecosystem::Archive:ver<0.0.4>:auth<zef:lizmat> {
 
     method meta-as-json() {
         $!meta-lock.protect: {
-            $!meta-as-json
-              ?? $!meta-as-json
-              !! $!meta-as-json =
-                   to-json(%!meta.sort(*.key).map(*.value), :!pretty)
+            $!meta-as-json ||=
+              to-json %!meta.sort(*.key).map(*.value), :!pretty, :sorted-keys
         }
     }
 
@@ -500,9 +522,9 @@ class Ecosystem::Archive:ver<0.0.4>:auth<zef:lizmat> {
         }
     }
 
-    method update() {
+    method update(:$force-json) {
         my %meta := %!meta.clone;
-        self!update;
+        self!update($force-json);
         Map.new((
           %!meta.grep({ %meta{.key}:!exists })
         ))
