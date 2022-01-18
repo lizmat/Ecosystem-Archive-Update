@@ -18,6 +18,7 @@
   "perl": "6.d",
   "provides": {
     "Ecosystem::Archive": "lib/Ecosystem/Archive.rakumod"
+    "Ecosystem::Archive::Update": "lib/Ecosystem/Archive/Update.rakumod"
   },
   "resources": [
   ],
@@ -26,5 +27,5 @@
   ],
   "test-depends": [
   ],
-  "version": "0.0.5"
+  "version": "0.0.6"
 }

@@ -1,5 +1,5 @@
 use Test;
-use Ecosystem::Archive;
+use Ecosystem::Archive::Update;
 
 plan 24;
 
@@ -9,8 +9,8 @@ my $jsons   := $*PROGRAM.sibling("meta");
 ok $shelves.e, "do we have an archive to test with";
 ok $jsons.e,   "do we have a meta to test with";
 
-my $ea = Ecosystem::Archive.new(:$shelves, :$jsons);
-isa-ok $ea, Ecosystem::Archive;
+my $ea = Ecosystem::Archive::Update.new(:$shelves, :$jsons);
+isa-ok $ea, Ecosystem::Archive::Update;
 is $ea.shelves, $shelves, 'did we get the right archive dir';
 is $ea.jsons,   $jsons,   'did we get the right meta dir';
 
