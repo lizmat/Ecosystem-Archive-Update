@@ -17,7 +17,7 @@
   "name": "Ecosystem::Archive",
   "perl": "6.d",
   "provides": {
-    "Ecosystem::Archive": "lib/Ecosystem/Archive.rakumod"
+    "Ecosystem::Archive": "lib/Ecosystem/Archive.rakumod",
     "Ecosystem::Archive::Update": "lib/Ecosystem/Archive/Update.rakumod"
   },
   "resources": [
