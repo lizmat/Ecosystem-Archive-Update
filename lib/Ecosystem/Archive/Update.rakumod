@@ -641,13 +641,13 @@ dd %distribution<source-url>;
 
 =head1 NAME
 
-Ecosystem::Archive::Update - Interface to updating the Raku Ecosystem Archive
+Ecosystem::Archive::Update - Updating the Raku Ecosystem Archive
 
 =head1 SYNOPSIS
 
 =begin code :lang<raku>
 
-use Ecosystem::Archive;
+use Ecosystem::Archive::Update;
 
 my $ea = Ecosystem::Archive::Update.new(
   shelves     => 'archive',
@@ -944,7 +944,7 @@ information in a thread-safe manner.
 
 Elizabeth Mattijsen <liz@raku.rocks>
 
-Source can be located at: https://github.com/lizmat/Ecosystem-Archive.
+Source can be located at: https://github.com/lizmat/Ecosystem-Archive-Update .
 Comments and Pull Requests are welcome.
 
 =head1 COPYRIGHT AND LICENSE

@@ -12,17 +12,16 @@
     "Rakudo::CORE::META:ver<0.0.3>:auth<zef:lizmat>",
     "Identity::Utils:ver<0.0.4>:auth<zef:lizmat>"
   ],
-  "description": "Interface to the Raku Ecosystem Archive",
+  "description": "Updating the Raku Ecosystem Archive",
   "license": "Artistic-2.0",
-  "name": "Ecosystem::Archive",
+  "name": "Ecosystem::Archive::Update",
   "perl": "6.d",
   "provides": {
-    "Ecosystem::Archive": "lib/Ecosystem/Archive.rakumod",
     "Ecosystem::Archive::Update": "lib/Ecosystem/Archive/Update.rakumod"
   },
   "resources": [
   ],
-  "source-url": "https://github.com/lizmat/Ecosystem-Archive.git",
+  "source-url": "https://github.com/lizmat/Ecosystem-Archive-Update.git",
   "tags": [
   ],
   "test-depends": [

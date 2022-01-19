@@ -1,17 +1,17 @@
-[![Actions Status](https://github.com/lizmat/Ecosystem-Archive/workflows/test/badge.svg)](https://github.com/lizmat/Ecosystem-Archive/actions)
+[![Actions Status](https://github.com/lizmat/Ecosystem-Archive-Update/workflows/test/badge.svg)](https://github.com/lizmat/Ecosystem-Archive-Update/actions)
 
 NAME
 ====
 
-Ecosystem::Archive - Interface to the Raku Ecosystem Archive
+Ecosystem::Archive::Update - Updating the Raku Ecosystem Archive
 
 SYNOPSIS
 ========
 
 ```raku
-use Ecosystem::Archive;
+use Ecosystem::Archive::Update;
 
-my $ea = Ecosystem::Archive.new(
+my $ea = Ecosystem::Archive::Update.new(
   shelves     => 'archive',
   jsons       => 'meta',
   http-client => default-http-client
@@ -24,7 +24,7 @@ say "Archive has $ea.meta.elems() identities:";
 DESCRIPTION
 ===========
 
-Ecosystem::Archive provides the basic logic to the Raku Programming Language Ecosystem Archive, a place where (almost) every distribution ever available in the Raku Ecosystem, can be obtained even after it has been removed (specifically in the case of the old ecosystem master list and the distributions kept on CPAN).
+Ecosystem::Archive::Update provides the basic logic to updating the Raku Ecosystem Archive, a place where (almost) every distribution ever available in the Raku Ecosystem, can be obtained even after it has been removed (specifically in the case of the old ecosystem master list and the distributions kept on CPAN).
 
 ARGUMENTS
 ---------
@@ -247,29 +247,17 @@ my %updated = $ea.update;
 
 Updates all the meta-information and downloads any new distributions. Returns a hash with the identities and the meta info of any distributions that were not seen before. Also updates the `.meta` and `.modules` information in a thread-safe manner.
 
-EXPORTED SUBROUTINES
-====================
-
-identity2module
----------------
-
-```raku
-say identity2module("zef:ver<0.1.1>:auth<zef:ugexe>");  # zef
-```
-
-Returns the module of a given identity.
-
 AUTHOR
 ======
 
 Elizabeth Mattijsen <liz@raku.rocks>
 
-Source can be located at: https://github.com/lizmat/Ecosystem-Archive. Comments and Pull Requests are welcome.
+Source can be located at: https://github.com/lizmat/Ecosystem-Archive-Update . Comments and Pull Requests are welcome.
 
 COPYRIGHT AND LICENSE
 =====================
 
-Copyright 2021 Elizabeth Mattijsen
+Copyright 2021, 2022 Elizabeth Mattijsen
 
 This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
 
