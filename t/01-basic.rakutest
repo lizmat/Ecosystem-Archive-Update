@@ -14,7 +14,7 @@ isa-ok $ea, Ecosystem::Archive::Update;
 is $ea.shelves, $shelves, 'did we get the right archive dir';
 is $ea.jsons,   $jsons,   'did we get the right meta dir';
 
-is-deeply $ea.meta.keys.grep(!*.starts-with("CORE:")).sort, <
+is-deeply $ea.identities.keys.grep(!*.starts-with("CORE:")).sort, <
   P5study:ver<0.0.3>:auth<cpan:ELIZABETH>
   P5study:ver<0.0.4>:auth<cpan:ELIZABETH>
   P5study:ver<0.0.5>:auth<cpan:ELIZABETH>
@@ -26,12 +26,13 @@ is-deeply $ea.meta.keys.grep(!*.starts-with("CORE:")).sort, <
   eigenstates:ver<0.0.5>:auth<fez:lizmat>
   eigenstates:ver<0.0.6>:auth<zef:lizmat>
   eigenstates:ver<0.0.7>:auth<zef:lizmat>
->, 'did we get the right meta';
+>, 'did we get the right identities';
 
 # Filter out whatever CORE modules are in there
-my %modules := Map.new(($ea.modules.grep(!*.value.head.starts-with('CORE:'))));
+my %use-targets :=
+  Map.new(($ea.use-targets.grep(!*.value.head.starts-with('CORE:'))));
 
-is-deeply %modules, Map.new((
+is-deeply %use-targets, Map.new((
   P5study => (my str @ = <
     P5study:ver<0.0.6>:auth<zef:lizmat>
     P5study:ver<0.0.5>:auth<cpan:ELIZABETH>
