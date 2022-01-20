@@ -24,9 +24,9 @@ class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
     has $.degree       is built(:bind);
     has $.batch        is built(:bind);
     has $.http-client  is built(:bind) = default-http-client;
-    has %!meta;
-    has %!distro-names;
-    has %!use-targets;
+    has %.identities   is built(False);
+    has %.distro-names is built(False);
+    has %.use-targets  is built(False);
     has @!notes;
     has str  $!meta-as-json = "";
     has Lock $!meta-lock;
@@ -48,7 +48,7 @@ class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
             my $name     := %distribution<name>;
             my $identity := %distribution<dist>;
 
-            %!meta{$identity} := %distribution;
+            %!identities{$identity} := %distribution;
             %!distro-names{$name}  := my str @ = $identity;
             for %distribution<provides>.keys {
                 %!use-targets{$_} := my str @ = $identity;
@@ -130,15 +130,15 @@ class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
 
     method !update-meta(\updates --> Nil) {
         $!meta-lock.protect: {
-            my %meta         := %!meta.clone;
-            my %use-targets  := %!use-targets.clone;
-            my %distro-names := %!distro-names.clone;
+            my %identities   = %!identities;
+            my %use-targets  = %!use-targets;
+            my %distro-names = %!distro-names;
 
             my %updated-use-targets;
             my %updated-distro-names;
 
             for updates -> (:key($identity), :value(%distribution)) {
-                %meta{$identity} := %distribution;
+                %identities{$identity} := %distribution;
 
                 given %distribution<name> {
                     (%distro-names{$_} // (%distro-names{$_} := my str @))
@@ -169,9 +169,9 @@ class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
                     %use-targets{$module} :=
                       sort-identities %use-targets{$module};
                 }
-                %!meta         := %meta;
-                %!use-targets  := %use-targets;
-                %!distro-names := %distro-names;
+                %!identities   := %identities.Map;
+                %!use-targets  := %use-targets.Map;
+                %!distro-names := %distro-names.Map;
                 $!meta-as-json  = "";
             }
         }
@@ -468,8 +468,8 @@ dd %distribution<source-url>;
 
     method meta-as-json() {
         $!meta-lock.protect: {
-            $!meta-as-json ||=
-              to-json %!meta.sort(*.key).map(*.value), :!pretty, :sorted-keys
+            $!meta-as-json ||= to-json
+              %!identities.sort(*.key).map(*.value), :!pretty, :sorted-keys
         }
     }
 
@@ -496,10 +496,10 @@ dd %distribution<source-url>;
     }
 
     method update(:$force-json) {
-        my %meta := %!meta.clone;
+        my %identities := %!identities.clone;
         self!update($force-json);
         Map.new((
-          %!meta.grep({ %meta{.key}:!exists })
+          %!identities.grep({ %identities{.key}:!exists })
         ))
     }
 
@@ -541,7 +541,7 @@ dd %distribution<source-url>;
                       $name, :ver(%json<version>), :$auth, :api(%json<api>)
                     );
 
-                    unless %!meta{$identity} {
+                    unless %!identities{$identity} {
                         my $io := $!jsons.add($name);
                         $io.mkdir;
                         $io := $io.child("$identity.json");
@@ -577,9 +577,6 @@ dd %distribution<source-url>;
         @added
     }
 
-    method meta()    { %!meta.Map    }
-    method distro-names() { %!distro-names.Map }
-    method use-targets() { %!use-targets.Map }
     method find-identities($name, :$ver, :$auth, :$api, :$include-distros) {
 
         my sub filter(str @identities) {
@@ -839,12 +836,12 @@ stored.  For instance the C<IRC::Client> distribution:
        |- ...
     |- ...
 
-=head2 meta
+=head2 identities
 
 =begin code :lang<raku>
 
-say "Archive has $ea.meta.elems() identities, they are:";
-.say for $ea.meta.keys.sort;
+say "Archive has $ea.identities.elems() identities, they are:";
+.say for $ea.identities.keys.sort;
 
 =end code
 
@@ -936,7 +933,7 @@ my %updated = $ea.update;
 
 Updates all the meta-information and downloads any new distributions.
 Returns a hash with the identities and the meta info of any distributions
-that were not seen before.  Also updates the C<.meta> and C<.use-targets>
+that were not seen before.  Also updates the C<.identities> and C<.use-targets>
 information in a thread-safe manner.
 
 =head1 AUTHOR
