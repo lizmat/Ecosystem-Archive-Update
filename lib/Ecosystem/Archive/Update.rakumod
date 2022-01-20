@@ -94,12 +94,6 @@ class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
             ?? 'gitlab'
             !! Nil
     }
-    sub build-identity($name, $version, $auth, $api) {
-        my $identity := $name ~ ":ver<$version>:auth<$auth>";
-        ($api && $api ne "0")
-          ?? $identity ~ ":api<$api>"
-          !! $identity
-    }
     sub github-download-URL($user, $repo, $tag = 'master') {
         "https://github.com/$user/$repo/archive/$tag.tar.gz"
     }
@@ -312,11 +306,11 @@ class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
                             # Make sure we have a matching identity in the
                             # META information.
                             my $identity :=
-                              %distribution<dist> := build-identity(
+                              %distribution<dist> := build(
                                 $name,
-                                $version,
-                                %distribution<auth>,
-                                %distribution<api>
+                                :ver($version),
+                                :auth(%distribution<auth>),
+                                :api(%distribution<api>)
                               );
 
                             # Set up META for later confirmation with
@@ -408,8 +402,11 @@ dd %distribution<source-url>;
                                 }
 
                                 # various checks and fixes
-                                my $identity := build-identity(
-                                  $name, $version, $auth, %distribution<api>
+                                my $identity := build(
+                                  $name,
+                                  :ver($version),
+                                  :$auth,
+                                  :api(%distribution<api>)
                                 );
                                 if %distribution<dist> -> $dist {
                                     if $dist ne $identity {
@@ -538,8 +535,8 @@ dd %distribution<source-url>;
                     $auth := "$base:$default-auth"
                       unless $auth && $auth.contains(":");
 
-                    my $identity := build-identity(
-                      $name, %json<version>, $auth, %json<api>
+                    my $identity := build(
+                      $name, :ver(%json<version>), :$auth, :api(%json<api>)
                     );
 
                     unless %!meta{$identity} {
