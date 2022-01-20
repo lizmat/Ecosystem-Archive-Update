@@ -25,7 +25,7 @@ class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
     has $.batch        is built(:bind);
     has $.http-client  is built(:bind) = default-http-client;
     has %!meta;
-    has %!distros;
+    has %!distro-names;
     has %!modules;
     has @!notes;
     has str  $!meta-as-json = "";
@@ -49,7 +49,7 @@ class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
             my $identity := %distribution<dist>;
 
             %!meta{$identity} := %distribution;
-            %!distros{$name}  := my str @ = $identity;
+            %!distro-names{$name}  := my str @ = $identity;
             for %distribution<provides>.keys {
                 %!modules{$_} := my str @ = $identity;
             }
@@ -132,18 +132,18 @@ class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
         $!meta-lock.protect: {
             my %meta    := %!meta.clone;
             my %modules := %!modules.clone;
-            my %distros := %!distros.clone;
+            my %distro-names := %!distro-names.clone;
 
             my %updated-modules;
-            my %updated-distros;
+            my %updated-distro-names;
 
             for updates -> (:key($identity), :value(%distribution)) {
                 %meta{$identity} := %distribution;
 
                 given %distribution<name> {
-                    (%distros{$_} // (%distros{$_} := my str @))
+                    (%distro-names{$_} // (%distro-names{$_} := my str @))
                       .push($identity);
-                    %updated-distros{$_}++;
+                    %updated-distro-names{$_}++;
                 }
 
                 if %distribution<provides> -> %provides {
@@ -160,16 +160,17 @@ class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
                   @identities.sort.reverse.sort( { version($_) }).reverse
             }
 
-            if %updated-distros {
-                for %updated-distros.keys -> $distro {
-                    %distros{$distro} := sort-identities %distros{$distro};
+            if %updated-distro-names {
+                for %updated-distro-names.keys -> $distro {
+                    %distro-names{$distro} :=
+                      sort-identities %distro-names{$distro};
                 }
                 for %updated-modules.keys -> $module {
                     %modules{$module} := sort-identities %modules{$module};
                 }
                 %!meta    := %meta;
                 %!modules := %modules;
-                %!distros := %distros;
+                %!distro-names := %distro-names;
                 $!meta-as-json = "";
             }
         }
@@ -576,7 +577,7 @@ dd %distribution<source-url>;
     }
 
     method meta()    { %!meta.Map    }
-    method distros() { %!distros.Map }
+    method distro-names() { %!distro-names.Map }
     method modules() { %!modules.Map }
     method find-identities($name, :$ver, :$auth, :$api, :$include-distros) {
 
@@ -605,7 +606,7 @@ dd %distribution<source-url>;
             if %!modules{$name} -> str @identities {
                 filter @identities
             }
-            elsif $include-distros &&  %!distros{$name} -> str @identities {
+            elsif $include-distros &&  %!distro-names{$name} -> str @identities {
                 filter @identities
             }
             else {
@@ -616,7 +617,7 @@ dd %distribution<source-url>;
             if %!modules{$name} -> str @identities {
                 @identities.List
             }
-            elsif $include-distros && %!distros{$name} -> str @identities {
+            elsif $include-distros && %!distro-names{$name} -> str @identities {
                 @identities.List
             }
             else {
@@ -743,12 +744,12 @@ say $ea.distro-io($identity);
 Returns an C<IO> object for the given identity, or C<Nil> if it can not be
 found.
 
-=head2 distros
+=head2 distro-names
 
 =begin code :lang<raku>
 
-say "Archive has $ea.distros.elems() different distributions, they are:";
-.say for $ea.distros.keys.sort;
+say "Archive has $ea.distro-names.elems() different distributions, they are:";
+.say for $ea.distro-names.keys.sort;
 
 =end code
 
@@ -899,8 +900,8 @@ Returns the C<notes> of the object as a C<List>.
 =begin code :lang<raku>
 
 indir $ea.shelves, {
-    my $distros = (shell 'ls */*', :out).out.lines.elems;
-    say "$distros different distributions in archive";
+    my $distro-names = (shell 'ls */*/*', :out).out.lines.elems;
+    say "$distro-names different distributions in archive";
 }
 
 =end code
