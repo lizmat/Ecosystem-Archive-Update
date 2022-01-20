@@ -26,7 +26,7 @@ class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
     has $.http-client  is built(:bind) = default-http-client;
     has %!meta;
     has %!distro-names;
-    has %!modules;
+    has %!use-targets;
     has @!notes;
     has str  $!meta-as-json = "";
     has Lock $!meta-lock;
@@ -51,7 +51,7 @@ class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
             %!meta{$identity} := %distribution;
             %!distro-names{$name}  := my str @ = $identity;
             for %distribution<provides>.keys {
-                %!modules{$_} := my str @ = $identity;
+                %!use-targets{$_} := my str @ = $identity;
             }
         }
 
@@ -130,11 +130,11 @@ class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
 
     method !update-meta(\updates --> Nil) {
         $!meta-lock.protect: {
-            my %meta    := %!meta.clone;
-            my %modules := %!modules.clone;
+            my %meta         := %!meta.clone;
+            my %use-targets  := %!use-targets.clone;
             my %distro-names := %!distro-names.clone;
 
-            my %updated-modules;
+            my %updated-use-targets;
             my %updated-distro-names;
 
             for updates -> (:key($identity), :value(%distribution)) {
@@ -148,9 +148,9 @@ class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
 
                 if %distribution<provides> -> %provides {
                     for %provides.keys {
-                        (%modules{$_} // (%modules{$_} := my str @))
+                        (%use-targets{$_} // (%use-targets{$_} := my str @))
                           .push($identity);
-                        %updated-modules{$_}++;
+                        %updated-use-targets{$_}++;
                     }
                 }
             }
@@ -165,13 +165,14 @@ class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
                     %distro-names{$distro} :=
                       sort-identities %distro-names{$distro};
                 }
-                for %updated-modules.keys -> $module {
-                    %modules{$module} := sort-identities %modules{$module};
+                for %updated-use-targets.keys -> $module {
+                    %use-targets{$module} :=
+                      sort-identities %use-targets{$module};
                 }
-                %!meta    := %meta;
-                %!modules := %modules;
+                %!meta         := %meta;
+                %!use-targets  := %use-targets;
                 %!distro-names := %distro-names;
-                $!meta-as-json = "";
+                $!meta-as-json  = "";
             }
         }
     }
@@ -578,7 +579,7 @@ dd %distribution<source-url>;
 
     method meta()    { %!meta.Map    }
     method distro-names() { %!distro-names.Map }
-    method modules() { %!modules.Map }
+    method use-targets() { %!use-targets.Map }
     method find-identities($name, :$ver, :$auth, :$api, :$include-distros) {
 
         my sub filter(str @identities) {
@@ -603,7 +604,7 @@ dd %distribution<source-url>;
         }
 
         if $ver || $auth || $api {
-            if %!modules{$name} -> str @identities {
+            if %!use-targets{$name} -> str @identities {
                 filter @identities
             }
             elsif $include-distros &&  %!distro-names{$name} -> str @identities {
@@ -614,7 +615,7 @@ dd %distribution<source-url>;
             }
         }
         else {
-            if %!modules{$name} -> str @identities {
+            if %!use-targets{$name} -> str @identities {
                 @identities.List
             }
             elsif $include-distros && %!distro-names{$name} -> str @identities {
@@ -807,7 +808,7 @@ Only C<Github> and C<Gitlab> URLs are currently supported.
 Returns a list of C<Pair>s of the distributions that were added,  with the
 identity as the key, and the META information hash as the value.
 
-Updates the C<.meta> and C<.modules> meta-information in a thread-safe
+Updates the C<.meta> and C<.use-targets> meta-information in a thread-safe
 manner.
 
 =head2 jsons
@@ -862,12 +863,12 @@ say $ea.meta-as-json;  # at least 3MB of text
 Returns the JSON of all the currently known meta-information.  The
 JSON is ordered by identity in the top level array.
 
-=head2 modules
+=head2 use-targets
 
 =begin code :lang<raku>
 
-say "Archive has $ea.modules.elems() different modules, they are:";
-.say for $ea.modules.keys.sort;
+say "Archive has $ea.use-targets.elems() different 'use' targets, they are:";
+.say for $ea.use-targets.keys.sort;
 
 =end code
 
@@ -935,7 +936,7 @@ my %updated = $ea.update;
 
 Updates all the meta-information and downloads any new distributions.
 Returns a hash with the identities and the meta info of any distributions
-that were not seen before.  Also updates the C<.meta> and C<.modules>
+that were not seen before.  Also updates the C<.meta> and C<.use-targets>
 information in a thread-safe manner.
 
 =head1 AUTHOR
