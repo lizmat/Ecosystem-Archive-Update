@@ -10,7 +10,7 @@
     "JSON::Fast:ver<0.16>",
     "paths:ver<10.0.2>:auth<zef:lizmat>",
     "Rakudo::CORE::META:ver<0.0.3>:auth<zef:lizmat>",
-    "Identity::Utils:ver<0.0.4>:auth<zef:lizmat>"
+    "Identity::Utils:ver<0.0.6>:auth<zef:lizmat>"
   ],
   "description": "Updating the Raku Ecosystem Archive",
   "license": "Artistic-2.0",
@@ -26,5 +26,5 @@
   ],
   "test-depends": [
   ],
-  "version": "0.0.6"
+  "version": "0.0.7"
 }

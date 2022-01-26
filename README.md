@@ -90,12 +90,12 @@ say $ea.distro-io($identity);
 
 Returns an `IO` object for the given identity, or `Nil` if it can not be found.
 
-distros
--------
+distro-names
+------------
 
 ```raku
-say "Archive has $ea.distros.elems() different distributions, they are:";
-.say for $ea.distros.keys.sort;
+say "Archive has $ea.distro-names.elems() different distributions, they are:";
+.say for $ea.distro-names.keys.sort;
 ```
 
 Returns a `Map` keyed by distribution name, with a list of identities that are available of this distribution, as value.
@@ -136,7 +136,7 @@ Only `Github` and `Gitlab` URLs are currently supported.
 
 Returns a list of `Pair`s of the distributions that were added, with the identity as the key, and the META information hash as the value.
 
-Updates the `.meta` and `.modules` meta-information in a thread-safe manner.
+Updates the `.meta` and `.use-targets` meta-information in a thread-safe manner.
 
 jsons
 -----
@@ -164,12 +164,12 @@ The `IO` object of the directory in which the JSON meta files are being stored. 
          |- ...
       |- ...
 
-meta
-----
+identities
+----------
 
 ```raku
-say "Archive has $ea.meta.elems() identities, they are:";
-.say for $ea.meta.keys.sort;
+say "Archive has $ea.identities.elems() identities, they are:";
+.say for $ea.identities.keys.sort;
 ```
 
 Returns a hash of all of the META information of all distributions, keyed by identity (for example "Module::Name:ver<0.1>:auth<foo:bar>:api<1>"). The value is a hash obtained from the distribution's meta data.
@@ -183,12 +183,12 @@ say $ea.meta-as-json;  # at least 3MB of text
 
 Returns the JSON of all the currently known meta-information. The JSON is ordered by identity in the top level array.
 
-modules
--------
+use-targets
+-----------
 
 ```raku
-say "Archive has $ea.modules.elems() different modules, they are:";
-.say for $ea.modules.keys.sort;
+say "Archive has $ea.use-targets.elems() different 'use' targets, they are:";
+.say for $ea.use-targets.keys.sort;
 ```
 
 Returns a `Map` keyed by module name, with a list of identities that provide that module name, as value.
@@ -217,8 +217,8 @@ shelves
 
 ```raku
 indir $ea.shelves, {
-    my $distros = (shell 'ls */*', :out).out.lines.elems;
-    say "$distros different distributions in archive";
+    my $distro-names = (shell 'ls */*/*', :out).out.lines.elems;
+    say "$distro-names different distributions in archive";
 }
 ```
 
@@ -245,7 +245,7 @@ update
 my %updated = $ea.update;
 ```
 
-Updates all the meta-information and downloads any new distributions. Returns a hash with the identities and the meta info of any distributions that were not seen before. Also updates the `.meta` and `.modules` information in a thread-safe manner.
+Updates all the meta-information and downloads any new distributions. Returns a hash with the identities and the meta info of any distributions that were not seen before. Also updates the `.identities` and `.use-targets` information in a thread-safe manner.
 
 AUTHOR
 ======

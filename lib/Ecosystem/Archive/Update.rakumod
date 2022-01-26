@@ -2,7 +2,7 @@ use Cro::HTTP::Client:ver<0.8.7>;
 use JSON::Fast:ver<0.16>;
 use paths:ver<10.0.2>:auth<zef:lizmat>;
 use Rakudo::CORE::META:ver<0.0.3>:auth<zef:lizmat>;
-use Identity::Utils:ver<0.0.4>:auth<zef:lizmat>;
+use Identity::Utils:ver<0.0.6>:auth<zef:lizmat>;
 
 # Locally stored JSON files are assumed to be correct
 sub distribution-from-io($io) { from-json $io.slurp } # , :immutable }
@@ -18,7 +18,7 @@ sub distribution-to-io(%distribution, $io) {
 # version
 sub distribution-from-text($text) { try from-json $text }
 
-class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
+class Ecosystem::Archive::Update:ver<0.0.7>:auth<zef:lizmat> {
     has $.shelves      is built(:bind);
     has $.jsons        is built(:bind);
     has $.degree       is built(:bind);
@@ -157,7 +157,7 @@ class Ecosystem::Archive::Update:ver<0.0.6>:auth<zef:lizmat> {
 
             sub sort-identities(str @identities) {
                 my str @ =
-                  @identities.sort.reverse.sort( { version($_) }).reverse
+                  @identities.sort(&version).reverse.sort(&short-name)
             }
 
             if %updated-distro-names {
@@ -468,8 +468,13 @@ dd %distribution<source-url>;
 
     method meta-as-json() {
         $!meta-lock.protect: {
-            $!meta-as-json ||= to-json
-              %!identities.sort(*.key).map(*.value), :!pretty, :sorted-keys
+            $!meta-as-json ||= do {
+                "[\n\n"
+                  ~ %!identities.sort(*.key).map({
+                      to-json .value, :!pretty, :sorted-keys
+                    }).join(",\n")
+                  ~ "\n]"
+            }
         }
     }
 

@@ -2,6 +2,10 @@ Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
 
+0.0.7  2022-01-26T13:40:07+01:00
+    - Up dependency on Identity::Utils
+    - Write META file in special hyperable format
+
 0.0.6  2022-01-19T11:56:38+01:00
     - Rename dist / module to Ecosystem::Archive::Update
       To allow Ecosystem::Archive for introspection in the future
