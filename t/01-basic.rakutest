@@ -86,7 +86,7 @@ is-deeply $ea.find-identities('P5study', :auth<cpan:ELIZABETH>), <
 # Since hashes have indeterminate order, it's hard to compare the
 # resulting JSON.  But in whichever order it is rendered, the total
 # length of the JSON should be always the same for the test set.
-is $ea.meta-as-json.chars, 6264, 'did we get correct json data';
+is $ea.meta-as-json.chars, 6265, 'did we get correct json data';
 
 my $io := $ea.distro-io('P5study:ver<0.0.6>:auth<zef:lizmat>');
 isa-ok $io, IO::Path, 'Did we get an IO::Path for the distro';
