@@ -18,7 +18,7 @@ sub distribution-to-io(%distribution, $io) {
 # version
 sub distribution-from-text($text) { try from-json $text }
 
-class Ecosystem::Archive::Update:ver<0.0.8>:auth<zef:lizmat> {
+class Ecosystem::Archive::Update:ver<0.0.9>:auth<zef:lizmat> {
     has $.shelves      is built(:bind);
     has $.jsons        is built(:bind);
     has $.degree       is built(:bind);
@@ -106,6 +106,17 @@ class Ecosystem::Archive::Update:ver<0.0.8>:auth<zef:lizmat> {
           .subst('<','%3C',:g).subst('>','%3E',:g)
     }
 
+    sub sort-identities(@identities) {
+        my %short-name = @identities.map: { $_ => short-name($_) }
+        my str @ = @identities.sort: -> $a, $b {
+          %short-name{$a} cmp %short-name{$b}
+            || version($b) cmp version($a)
+            || auth($a) cmp auth($b)
+            || ver($b) cmp ver($a)  # 0.9.0 before 0.9
+            || (api($a) // "") cmp (api($b) // "")
+        }
+    }
+
     method note($message --> Nil) {
         $!note-lock.protect: { @!notes.push: $message }
     }
@@ -155,11 +166,6 @@ class Ecosystem::Archive::Update:ver<0.0.8>:auth<zef:lizmat> {
                 }
             }
 
-            sub sort-identities(str @identities) {
-                my str @ =
-                  @identities.sort(&version).reverse.sort(&short-name)
-            }
-
             if %updated-distro-names {
                 for %updated-distro-names.keys -> $distro {
                     %distro-names{$distro} :=
@@ -177,10 +183,16 @@ class Ecosystem::Archive::Update:ver<0.0.8>:auth<zef:lizmat> {
         }
     }
 
-    method !make-json-io($name, $file) {
+    method !make-json-io($name, str $identity) {
         my $io := $!jsons.add($name.substr(0,1).uc).add($name);
         $io.mkdir;
-        $io.add("$file.json")
+        $io.add("$identity.json")
+    }
+
+    method !make-shelf-io(str $name, str $identity, str $extension) {
+        my $io := $!shelves.add($name.substr(0,1).uc).add($name);
+        $io.mkdir;
+        $io.add($identity ~ $extension)
     }
 
     method !update-zef($force-json --> Nil) {
@@ -199,21 +211,35 @@ class Ecosystem::Archive::Update:ver<0.0.8>:auth<zef:lizmat> {
             my $path := %distribution<path>:delete;
             %distribution<source-url> :=
               rea-download-URL %distribution<name>,$identity,extension($path);
-            my $json := self!make-json-io(%distribution<name>, $identity);
+            my $json  := self!make-json-io: %distribution<name>, $identity;
+            my $shelf := self!make-shelf-io:
+              %distribution<name>, $identity, extension($path);
             if $json.e {
-                distribution-to-io(%distribution, $json) if $force-json;
+                if $force-json {
+                    %distribution<release-date> :=
+                      self!distribution2yyyy-mm-dd($shelf);
+                    distribution-to-io(%distribution, $json);
+                    $identity => %distribution;
+                }
+
+                # The meta provided by fez backend does not provide
+                # release-date, so we need to fall back to locally
+                # stored META, just as in the other backends.
+                else {
+                    $identity => from-json($json.slurp)
+                }
+            }
+            elsif self!archive-distribution(
+              "$zef-base-url/$path", $shelf
+            ) -> $release-date {
+                %distribution<release-date> := $release-date;
+                distribution-to-io(%distribution, $json);
+                $identity => %distribution
             }
             else {
-                self!archive-distribution(
-                  "$zef-base-url/$path",
-                  %distribution<name>,
-                  $identity,
-                  extension($path)
-                );
-                distribution-to-io(%distribution, $json);
+                self.note: "Failed to archive $identity";
+                Empty
             }
-
-            $identity => %distribution
         }
     }
 
@@ -341,8 +367,9 @@ class Ecosystem::Archive::Update:ver<0.0.8>:auth<zef:lizmat> {
                 my $json     := self!make-json-io($name, $identity);
                 if self!archive-distribution(
                   "$cpan-base-url/authors/$path",
-                  $name, $identity, extension($path)
-                ) {
+                  self!make-shelf-io($name, $identity, extension($path))
+                ) -> $release-date {
+                    %distribution<release-date> := $release-date;
                     distribution-to-io(%distribution, $json)
                 }
                 elsif $force-json {
@@ -469,34 +496,46 @@ dd %distribution<source-url>;
     method meta-as-json() {
         $!meta-lock.protect: {
             $!meta-as-json ||= to-json
-              %!identities
-                .values
-                .sort({version .<dist>})
-                .reverse
-                .sort({short-name .<dist>}),
+              %!identities.values.sort( -> %a, %b {
+                  my $a := %a<dist>;
+                  my $b := %b<dist>;
+                  short-name($a) cmp short-name($b)
+                    || version($b) cmp version($a)
+                    || auth($a) cmp auth($b)
+                    || ver($b) cmp ver($a)  # 0.9.0 before 0.9
+                    || (api($a) // "") cmp (api($b) // "")
+              }),
               :sorted-keys
         }
     }
 
-    # Archive distribution, return whether JSON should be updated
-    method !archive-distribution($URL, $name, $identity, $extension) {
-        my $io := $!shelves.add($name.substr(0,1).uc).add($name);
-        $io.mkdir;
-        $io := $io.add($identity ~ $extension);
+    # Return YYYY-MM-DD of most recent file in tar-file
+    method !distribution2yyyy-mm-dd(IO::Path:D $io) {
+        my $tmp := 'tmp' ~ $*THREAD.id;
+        mkdir $tmp;
+        my $date = indir $tmp, {
+            run 'tar', 'xf', "$io.absolute()";
+            Date.new(paths.map(*.IO.modified).max)
+        }
+        run 'rm', '-rf', $tmp;
+        $date.yyyy-mm-dd
+    }
 
+    # Archive distribution, return whether JSON should be updated
+    method !archive-distribution($URL, $io) {
         # Don't load if we already have it (it's static!), and assume that
         # the META is already up-to-date.
         if $io.e {
-            False
+            Nil
         }
         else {
             CATCH {
                 self.note: "$URL failed to load";
-                return False;
+                return Nil;
             }
             my $resp := await $!http-client.get($URL);
             $io.spurt(await $resp.body);
-            True
+            self!distribution2yyyy-mm-dd($io)
         }
     }
 
@@ -553,9 +592,10 @@ dd %distribution<source-url>;
 
                         if try self!archive-distribution(
                             ::("&$base\-download-URL")($user, $repo, $sha),
-                            $name, $identity, '.tar.gz'
-                        ) {
-                            %json<auth> := $auth;
+                            self!make-shelf-io($name, $identity, '.tar.gz')
+                        ) -> $release-date {
+                            %json<auth>         := $auth;
+                            %json<release-date> := $release-date;
                             distribution-to-io(%json, $io);
                             @added.push: $identity => %json;
                         }
