@@ -1,14 +1,14 @@
 use Cro::HTTP::Client:ver<0.8.7>;
-use JSON::Fast::Hyper:ver<0.0.1>:auth<zef:lizmat>;
+use JSON::Fast::Hyper:ver<0.0.2>:auth<zef:lizmat>;
 use paths:ver<10.0.2>:auth<zef:lizmat>;
 use Rakudo::CORE::META:ver<0.0.3>:auth<zef:lizmat>;
 use Identity::Utils:ver<0.0.6>:auth<zef:lizmat>;
 
 # Locally stored JSON files are assumed to be correct
-sub distribution-from-io($io) { from-json $io.slurp } # , :immutable }
+sub meta-from-io($io) { from-json $io.slurp } # , :immutable }
 
 # Store given distribution at given io
-sub distribution-to-io(%distribution, $io) {
+sub meta-to-io(%distribution, $io) {
     $io.spurt: to-json %distribution, :!pretty, :sorted-keys
 }
 
@@ -16,17 +16,15 @@ sub distribution-to-io(%distribution, $io) {
 # so don't request an immutable version (as in future runs, it will
 # have read from the stored JSON anyway, and thus have an immutable
 # version
-sub distribution-from-text($text) { try from-json $text }
+sub meta-from-text($text) { try from-json $text }
 
-class Ecosystem::Archive::Update:ver<0.0.9>:auth<zef:lizmat> {
+class Ecosystem::Archive::Update:ver<0.0.10>:auth<zef:lizmat> {
     has $.shelves      is built(:bind);
     has $.jsons        is built(:bind);
     has $.degree       is built(:bind);
     has $.batch        is built(:bind);
     has $.http-client  is built(:bind) = default-http-client;
     has %.identities   is built(False);
-    has %.distro-names is built(False);
-    has %.use-targets  is built(False);
     has @!notes;
     has str  $!meta-as-json = "";
     has Lock $!meta-lock;
@@ -44,24 +42,17 @@ class Ecosystem::Archive::Update:ver<0.0.9>:auth<zef:lizmat> {
         $!meta-lock := Lock.new;
         $!note-lock := Lock.new;
 
-        with %Rakudo::CORE::META -> %distribution {
-            my $name     := %distribution<name>;
-            my $identity := %distribution<dist>;
-
-            %!identities{$identity} := %distribution;
-            %!distro-names{$name}  := my str @ = $identity;
-            for %distribution<provides>.keys {
-                %!use-targets{$_} := my str @ = $identity;
-            }
+        with %Rakudo::CORE::META -> %meta {
+            %!identities{%meta<dist>} := %meta;
         }
 
         self!update-meta: paths($!jsons, :file(*.ends-with('.json')))
           .race(:$!degree, :$!batch)
           .map: -> $path {
             my $io := $path.IO;
-            my %distribution := distribution-from-io($io);
-            with %distribution<dist> -> $identity {
-                $identity => %distribution
+            my %meta := meta-from-io($io);
+            with %meta<dist> -> $identity {
+                $identity => %meta
             }
             else {
                 self.note: "No identity found in $io.basename.chop(5)";
@@ -141,45 +132,11 @@ class Ecosystem::Archive::Update:ver<0.0.9>:auth<zef:lizmat> {
 
     method !update-meta(\updates --> Nil) {
         $!meta-lock.protect: {
-            my %identities   = %!identities;
-            my %use-targets  = %!use-targets;
-            my %distro-names = %!distro-names;
-
-            my %updated-use-targets;
-            my %updated-distro-names;
-
-            for updates -> (:key($identity), :value(%distribution)) {
-                %identities{$identity} := %distribution;
-
-                given %distribution<name> {
-                    (%distro-names{$_} // (%distro-names{$_} := my str @))
-                      .push($identity);
-                    %updated-distro-names{$_}++;
-                }
-
-                if %distribution<provides> -> %provides {
-                    for %provides.keys {
-                        (%use-targets{$_} // (%use-targets{$_} := my str @))
-                          .push($identity);
-                        %updated-use-targets{$_}++;
-                    }
-                }
+            my %identities = %!identities;
+            for updates -> (:key($identity), :value(%meta)) {
+                %identities{$identity} := %meta;
             }
-
-            if %updated-distro-names {
-                for %updated-distro-names.keys -> $distro {
-                    %distro-names{$distro} :=
-                      sort-identities %distro-names{$distro};
-                }
-                for %updated-use-targets.keys -> $module {
-                    %use-targets{$module} :=
-                      sort-identities %use-targets{$module};
-                }
-                %!identities   := %identities.Map;
-                %!use-targets  := %use-targets.Map;
-                %!distro-names := %distro-names.Map;
-                $!meta-as-json  = "";
-            }
+            %!identities  := %identities.Map;
         }
     }
 
@@ -199,27 +156,26 @@ class Ecosystem::Archive::Update:ver<0.0.9>:auth<zef:lizmat> {
         my $resp := await $!http-client.get('https://360.zef.pm');
         self!update-meta: (await $resp.body)
           .race(:$!degree, :$!batch)
-          .map: -> %distribution {
-            my $identity := %distribution<dist>;
-            if !$identity.contains(':api<') && %distribution<api> -> $api {
+          .map: -> %meta {
+            my $identity := %meta<dist>;
+            if !$identity.contains(':api<') && %meta<api> -> $api {
                 unless $api eq "0" {
                     $identity := $identity ~ ":api<$api>";
-                    %distribution<dist> := $identity;
+                    %meta<dist> := $identity;
                 }
             }
 
-            my $path := %distribution<path>:delete;
-            %distribution<source-url> :=
-              rea-download-URL %distribution<name>,$identity,extension($path);
-            my $json  := self!make-json-io: %distribution<name>, $identity;
-            my $shelf := self!make-shelf-io:
-              %distribution<name>, $identity, extension($path);
+            my $path := %meta<path>:delete;
+            my $name := %meta<name>;
+            %meta<source-url> :=
+              rea-download-URL $name,$identity,extension($path);
+            my $json  := self!make-json-io:  $name, $identity;
+            my $shelf := self!make-shelf-io: $name, $identity, extension($path);
             if $json.e {
                 if $force-json {
-                    %distribution<release-date> :=
-                      self!distribution2yyyy-mm-dd($shelf);
-                    distribution-to-io(%distribution, $json);
-                    $identity => %distribution;
+                    %meta<release-date> := self!distribution2yyyy-mm-dd($shelf);
+                    meta-to-io(%meta, $json);
+                    $identity => %meta;
                 }
 
                 # The meta provided by fez backend does not provide
@@ -232,9 +188,9 @@ class Ecosystem::Archive::Update:ver<0.0.9>:auth<zef:lizmat> {
             elsif self!archive-distribution(
               "$zef-base-url/$path", $shelf
             ) -> $release-date {
-                %distribution<release-date> := $release-date;
-                distribution-to-io(%distribution, $json);
-                $identity => %distribution
+                %meta<release-date> := $release-date;
+                meta-to-io(%meta, $json);
+                $identity => %meta
             }
             else {
                 self.note: "Failed to archive $identity";
@@ -288,7 +244,7 @@ class Ecosystem::Archive::Update:ver<0.0.9>:auth<zef:lizmat> {
                 my $URL  := "$cpan-base-url/authors/$path";
                 my $resp := await $!http-client.get($URL);
                 my $text := (await $resp.body).decode;
-                with distribution-from-text($text) -> %distribution {
+                with meta-from-text($text) -> %meta {
 
                     # Version encoded in path has priority over version in
                     # META because PAUSE would not allow uploads of the same
@@ -296,25 +252,24 @@ class Ecosystem::Archive::Update:ver<0.0.9>:auth<zef:lizmat> {
                     # allow uploads with a non-matching version in the META.
                     # Also make sure we skip any "v" in the version string.
                     with $nep5.rindex('-') {
-                        my $version := $nep5.substr($_ + 1);
-                        $version := $version.substr(1)
-                          if $version.starts-with('v');
+                        my $ver := $nep5.substr($_ + 1);
+                        $ver := $ver.substr(1) if $ver.starts-with('v');
 
-                        if $version.contains(/ <-[\d \.]> /) {
+                        if $ver.contains(/ <-[\d \.]> /) {
                             self.note:
                               "$id has strange version, keeping meta";
                         }
-                        elsif %distribution<version> -> $version-in-meta {
-                            if $version-in-meta ne $version {
+                        elsif %meta<version> -> $version-in-meta {
+                            if $version-in-meta ne $ver {
                                 self.note:
                                   "$id has version mismatch: $version-in-meta";
-                                %distribution<version> := $version;
+                                %meta<version> := $ver;
                             }
                         }
                         else {
                             self.note:
                               "$id has no version in meta";
-                            %distribution<version> := $version;
+                            %meta<version> := $ver;
                         }
 
                         # Sadly, we must assume that the name in the META
@@ -322,30 +277,26 @@ class Ecosystem::Archive::Update:ver<0.0.9>:auth<zef:lizmat> {
                         # that.  But since the URL has replaced '::' with '-'
                         # there is no way to distinguish between "Foo::Bar"
                         # and "Foo-Bar" as module names from the URL.
-                        if %distribution<name> -> $name {
+                        if %meta<name> -> $name {
 
                             # Force auth to CPAN, as that's the only thing
                             # that really makes sense, as CPAN would allow
                             # uploads with just about any auth, and this way
                             # we make sure that modules on CPAN are accredited
                             # correctly and prevent module squatting this way.
-                            %distribution<auth> := "cpan:@parts[3]";
+                            my $auth := %meta<auth> := "cpan:@parts[3]";
 
                             # Make sure we have a matching identity in the
                             # META information.
                             my $identity :=
-                              %distribution<dist> := build(
-                                $name,
-                                :ver($version),
-                                :auth(%distribution<auth>),
-                                :api(%distribution<api>)
-                              );
+                              %meta<dist> :=
+                                build $name, :$ver, :$auth, :api(%meta<api>);
 
                             # Set up META for later confirmation with
                             # actual tar file.
-                            %distribution<source-url> :=
+                            %meta<source-url> :=
                               rea-download-URL $name,$identity,extension($path);
-                            %valid{$id} := %distribution;
+                            %valid{$id} := %meta;
                         }
                         else {
                             self.note: "$id has no name in META";
@@ -361,20 +312,19 @@ class Ecosystem::Archive::Update:ver<0.0.9>:auth<zef:lizmat> {
             }
 
             # Not meta, so distribution info of which we should have seen meta
-            elsif %valid{$id} -> %distribution {
-                my $name     := %distribution<name>;
-                my $identity := %distribution<dist>;
+            elsif %valid{$id} -> %meta {
+                my $name     := %meta<name>;
+                my $identity := %meta<dist>;
                 my $json     := self!make-json-io($name, $identity);
                 if self!archive-distribution(
                   "$cpan-base-url/authors/$path",
                   self!make-shelf-io($name, $identity, extension($path))
                 ) -> $release-date {
-                    %distribution<release-date> := $release-date;
-                    distribution-to-io(%distribution, $json)
+                    %meta<release-date> := $release-date;
+                    meta-to-io(%meta, $json)
                 }
                 elsif $force-json {
-dd %distribution<source-url>;
-                    distribution-to-io(%distribution, $json)
+                    meta-to-io(%meta, $json)
                 }
                 else {
                     self.note: "Could not get archive for $id";
@@ -387,8 +337,8 @@ dd %distribution<source-url>;
         }
 
         # Make sure the meta info is ok
-        self!update-meta: %valid.values.map: -> %distribution {
-            %distribution<dist> => %distribution
+        self!update-meta: %valid.values.map: -> %meta {
+            %meta<dist> => %meta
         }
     }
 
@@ -406,13 +356,13 @@ dd %distribution<source-url>;
                 await $!http-client.get($URL)
             }();
             my $text := await $resp.body;
-            with distribution-from-text($text) -> %distribution {
-                my $name := %distribution<name>;
+            with meta-from-text($text) -> %meta {
+                my $name := %meta<name>;
                 if $name && $name.contains(' ') {
                     self.note: "$URL: invalid name '$name'";
                 }
                 elsif $name {
-                    if %distribution<version> -> $version {
+                    if %meta<version> -> $ver {
 # examples:
 # https://raw.githubusercontent.com/bbkr/TinyID/master/META6.json
 # https://gitlab.com/CIAvash/App-Football/raw/master/META6.json
@@ -421,37 +371,34 @@ dd %distribution<source-url>;
                             my $user := @parts[3];
                             my $repo := @parts[4];
 
-                            unless $user eq 'AlexDaniel' and $repo.contains('foo') {
+                            unless $user eq 'AlexDaniel'
+                              and $repo.contains('foo') {
                                 my $auth := "$base:$user";
-                                if %distribution<auth> -> $found {
+                                if %meta<auth> -> $found {
                                     if $found ne $auth {
                                         self.note: "auth: $name: $found -> $auth";
-                                        %distribution<auth> := $auth;
+                                        %meta<auth> := $auth;
                                     }
                                 }
 
                                 # various checks and fixes
-                                my $identity := build(
-                                  $name,
-                                  :ver($version),
-                                  :$auth,
-                                  :api(%distribution<api>)
-                                );
-                                if %distribution<dist> -> $dist {
+                                my $identity :=
+                                  build $name, :$ver, :$auth, :api(%meta<api>);
+                                if %meta<dist> -> $dist {
                                     if $dist ne $identity {
                                         self.note: "identity $name: $dist -> $identity";
-                                        %distribution<dist> := $identity;
+                                        %meta<dist> := $identity;
                                     }
                                 }
                                 else {
-                                    %distribution<dist> := $identity;
+                                    %meta<dist> := $identity;
                                 }
 
                                 my $json := self!make-json-io($name, $identity);
-                                %distribution<source-url> :=
+                                %meta<source-url> :=
                                   rea-download-URL $name, $identity, '.tar.gz';
                                 if $json.e {
-                                    distribution-to-io(%distribution,$json)
+                                    meta-to-io(%meta,$json)
                                       if $force-json;
                                 }
 # Since we cannot determine easily what the default branch is of a repo, we
@@ -467,8 +414,8 @@ dd %distribution<source-url>;
                                             $name, $identity, '.tar.gz'
                                           )
                                     }) {
-                                        distribution-to-io(%distribution,$json);
-                                        $result := $identity => %distribution # NEW!
+                                        meta-to-io(%meta,$json);
+                                        $result := $identity => %meta # NEW!
                                     }
                                 }
 
@@ -499,10 +446,10 @@ dd %distribution<source-url>;
               %!identities.values.sort( -> %a, %b {
                   my $a := %a<dist>;
                   my $b := %b<dist>;
-                  short-name($a) cmp short-name($b)
-                    || version($b) cmp version($a)
-                    || auth($a) cmp auth($b)
-                    || ver($b) cmp ver($a)  # 0.9.0 before 0.9
+                  short-name($a)       cmp short-name($b)
+                    || version($b)     cmp version($a)
+                    || auth($a)        cmp auth($b)
+                    || ver($b)         cmp ver($a)  # 0.9.0 before 0.9
                     || (api($a) // "") cmp (api($b) // "")
               }),
               :sorted-keys
@@ -540,10 +487,10 @@ dd %distribution<source-url>;
     }
 
     method update(:$force-json) {
-        my %identities := %!identities.clone;
+        my %before := %!identities.clone;
         self!update($force-json);
         Map.new((
-          %!identities.grep({ %identities{.key}:!exists })
+          %!identities.grep({ %before{.key}:!exists })
         ))
     }
 
@@ -575,15 +522,14 @@ dd %distribution<source-url>;
                 $json := "META.info".IO unless $json.e;
                 last unless $json.e;  # no json, can't do anything anymore
 
-                with try distribution-from-io($json) -> %json {
-                    my $name := %json<name>;
-                    my $auth := %json<auth>;
+                with try meta-from-io($json) -> %meta {
+                    my $name := %meta<name>;
+                    my $auth := %meta<auth>;
                     $auth := "$base:$default-auth"
                       unless $auth && $auth.contains(":");
 
-                    my $identity := build(
-                      $name, :ver(%json<version>), :$auth, :api(%json<api>)
-                    );
+                    my $identity := build
+                      $name, :ver(%meta<version>), :$auth, :api(%meta<api>);
 
                     unless %!identities{$identity} {
                         my $io := $!jsons.add($name);
@@ -594,10 +540,10 @@ dd %distribution<source-url>;
                             ::("&$base\-download-URL")($user, $repo, $sha),
                             self!make-shelf-io($name, $identity, '.tar.gz')
                         ) -> $release-date {
-                            %json<auth>         := $auth;
-                            %json<release-date> := $release-date;
-                            distribution-to-io(%json, $io);
-                            @added.push: $identity => %json;
+                            %meta<auth>         := $auth;
+                            %meta<release-date> := $release-date;
+                            meta-to-io(%meta, $io);
+                            @added.push: $identity => %meta;
                         }
                     }
                 }
@@ -620,61 +566,6 @@ dd %distribution<source-url>;
 
         self!update-meta(@added);
         @added
-    }
-
-    method find-identities($name, :$ver, :$auth, :$api, :$include-distros) {
-
-        my sub filter(str @identities) {
-            my $auth-needle := $auth ?? ":auth<$auth>" !! "";
-            my $api-needle  := $api && $api ne '0' ?? ":api<$api>" !! "";
-            my $version;
-            my &comp;
-            if $ver && $ver ne '*' {
-                $version := $ver.Version;
-                &comp = $ver.contains("+" | "*")
-                  ?? &infix:«>»
-                  !! &infix:«==»;
-            }
-
-            @identities.grep: {
-                (!$auth-needle || .contains($auth-needle))
-                  &&
-                (!$api-needle || .contains($api-needle))
-                  && 
-                (!&comp || comp(.&version, $version))
-            }
-        }
-
-        if $ver || $auth || $api {
-            if %!use-targets{$name} -> str @identities {
-                filter @identities
-            }
-            elsif $include-distros &&  %!distro-names{$name} -> str @identities {
-                filter @identities
-            }
-            else {
-                ()
-            }
-        }
-        else {
-            if %!use-targets{$name} -> str @identities {
-                @identities.List
-            }
-            elsif $include-distros && %!distro-names{$name} -> str @identities {
-                @identities.List
-            }
-            else {
-                ()
-            }
-        }
-    }
-
-    method distro-io($identity) {
-        my $io := $!shelves
-          .add($identity.substr(0,1).uc)
-          .add(short-name($identity))
-          .add("$identity.tar.gz");
-        $io.e ?? $io !! Nil
     }
 }
 
@@ -775,48 +666,6 @@ say "Using $ea.degree() CPUs";
 
 The number of CPU cores that will be used in parallel processing.
 
-=head2 distro-io
-
-=begin code :lang<raku>
-
-my $identity = $ea.find-identities('eigenstates').head;
-say $ea.distro-io($identity);
-
-=end code
-
-Returns an C<IO> object for the given identity, or C<Nil> if it can not be
-found.
-
-=head2 distro-names
-
-=begin code :lang<raku>
-
-say "Archive has $ea.distro-names.elems() different distributions, they are:";
-.say for $ea.distro-names.keys.sort;
-
-=end code
-
-Returns a C<Map> keyed by distribution name, with a list of identities that
-are available of this distribution, as value.
-
-=head2 find-identities
-
-=begin code :lang<raku>
-
-my @identities = $ea.find-identities('eigenstates', :ver<0.0.3*>);
-say "@identities[0] is the most recent";
-
-=end code
-
-Find the identities that supply the given module name (as a positional
-parameter) and possible refinement with named parameters for C<:ver>,
-C<:auth> and C<:api>.  Note that the C<:ver> specification can contain
-C<+> or C<*> to indicate a range rather than a single version.
-
-The identities will be returned sorted by highest version first.  So if
-you're interested in only the most recent version, then just select the
-first element returned.
-
 =head2 http-client
 
 =begin code :lang<raku>
@@ -850,8 +699,7 @@ Only C<Github> and C<Gitlab> URLs are currently supported.
 Returns a list of C<Pair>s of the distributions that were added,  with the
 identity as the key, and the META information hash as the value.
 
-Updates the C<.meta> and C<.use-targets> meta-information in a thread-safe
-manner.
+Updates the C<.meta> information in a thread-safe manner.
 
 =head2 jsons
 
@@ -904,18 +752,6 @@ say $ea.meta-as-json;  # at least 3MB of text
 
 Returns the JSON of all the currently known meta-information.  The
 JSON is ordered by identity in the top level array.
-
-=head2 use-targets
-
-=begin code :lang<raku>
-
-say "Archive has $ea.use-targets.elems() different 'use' targets, they are:";
-.say for $ea.use-targets.keys.sort;
-
-=end code
-
-Returns a C<Map> keyed by module name, with a list of identities that
-provide that module name, as value.
 
 =head2 note
 
@@ -978,8 +814,8 @@ my %updated = $ea.update;
 
 Updates all the meta-information and downloads any new distributions.
 Returns a hash with the identities and the meta info of any distributions
-that were not seen before.  Also updates the C<.identities> and C<.use-targets>
-information in a thread-safe manner.
+that were not seen before.  Also updates the C<.identities> information in
+a thread-safe manner.
 
 =head1 AUTHOR
 

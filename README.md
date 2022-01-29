@@ -80,38 +80,6 @@ say "Using $ea.degree() CPUs";
 
 The number of CPU cores that will be used in parallel processing.
 
-distro-io
----------
-
-```raku
-my $identity = $ea.find-identities('eigenstates').head;
-say $ea.distro-io($identity);
-```
-
-Returns an `IO` object for the given identity, or `Nil` if it can not be found.
-
-distro-names
-------------
-
-```raku
-say "Archive has $ea.distro-names.elems() different distributions, they are:";
-.say for $ea.distro-names.keys.sort;
-```
-
-Returns a `Map` keyed by distribution name, with a list of identities that are available of this distribution, as value.
-
-find-identities
----------------
-
-```raku
-my @identities = $ea.find-identities('eigenstates', :ver<0.0.3*>);
-say "@identities[0] is the most recent";
-```
-
-Find the identities that supply the given module name (as a positional parameter) and possible refinement with named parameters for `:ver`, `:auth` and `:api`. Note that the `:ver` specification can contain `+` or `*` to indicate a range rather than a single version.
-
-The identities will be returned sorted by highest version first. So if you're interested in only the most recent version, then just select the first element returned.
-
 http-client
 -----------
 
@@ -136,7 +104,7 @@ Only `Github` and `Gitlab` URLs are currently supported.
 
 Returns a list of `Pair`s of the distributions that were added, with the identity as the key, and the META information hash as the value.
 
-Updates the `.meta` and `.use-targets` meta-information in a thread-safe manner.
+Updates the `.meta` information in a thread-safe manner.
 
 jsons
 -----
@@ -182,16 +150,6 @@ say $ea.meta-as-json;  # at least 3MB of text
 ```
 
 Returns the JSON of all the currently known meta-information. The JSON is ordered by identity in the top level array.
-
-use-targets
------------
-
-```raku
-say "Archive has $ea.use-targets.elems() different 'use' targets, they are:";
-.say for $ea.use-targets.keys.sort;
-```
-
-Returns a `Map` keyed by module name, with a list of identities that provide that module name, as value.
 
 note
 ----
@@ -245,7 +203,7 @@ update
 my %updated = $ea.update;
 ```
 
-Updates all the meta-information and downloads any new distributions. Returns a hash with the identities and the meta info of any distributions that were not seen before. Also updates the `.identities` and `.use-targets` information in a thread-safe manner.
+Updates all the meta-information and downloads any new distributions. Returns a hash with the identities and the meta info of any distributions that were not seen before. Also updates the `.identities` information in a thread-safe manner.
 
 AUTHOR
 ======
