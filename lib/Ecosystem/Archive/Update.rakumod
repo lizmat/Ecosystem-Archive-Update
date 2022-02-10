@@ -1,8 +1,8 @@
 use Cro::HTTP::Client:ver<0.8.7>;
-use JSON::Fast::Hyper:ver<0.0.2>:auth<zef:lizmat>;
+use JSON::Fast::Hyper:ver<0.0.3>:auth<zef:lizmat>;
 use paths:ver<10.0.2>:auth<zef:lizmat>;
-use Rakudo::CORE::META:ver<0.0.3>:auth<zef:lizmat>;
-use Identity::Utils:ver<0.0.6>:auth<zef:lizmat>;
+use Rakudo::CORE::META:ver<0.0.5+>:auth<zef:lizmat>;
+use Identity::Utils:ver<0.0.9>:auth<zef:lizmat>;
 
 # Locally stored JSON files are assumed to be correct
 sub meta-from-io($io) { from-json $io.slurp } # , :immutable }
@@ -18,7 +18,7 @@ sub meta-to-io(%distribution, $io) {
 # version
 sub meta-from-text($text) { try from-json $text }
 
-class Ecosystem::Archive::Update:ver<0.0.11>:auth<zef:lizmat> {
+class Ecosystem::Archive::Update:ver<0.0.12>:auth<zef:lizmat> {
     has $.shelves      is built(:bind);
     has $.jsons        is built(:bind);
     has $.degree       is built(:bind);
