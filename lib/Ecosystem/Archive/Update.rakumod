@@ -18,7 +18,7 @@ sub meta-to-io(%distribution, $io) {
 # version
 sub meta-from-text($text) { try from-json $text }
 
-class Ecosystem::Archive::Update:ver<0.0.10>:auth<zef:lizmat> {
+class Ecosystem::Archive::Update:ver<0.0.11>:auth<zef:lizmat> {
     has $.shelves      is built(:bind);
     has $.jsons        is built(:bind);
     has $.degree       is built(:bind);
@@ -294,8 +294,6 @@ class Ecosystem::Archive::Update:ver<0.0.10>:auth<zef:lizmat> {
 
                             # Set up META for later confirmation with
                             # actual tar file.
-                            %meta<source-url> :=
-                              rea-download-URL $name,$identity,extension($path);
                             %valid{$id} := %meta;
                         }
                         else {
@@ -315,6 +313,8 @@ class Ecosystem::Archive::Update:ver<0.0.10>:auth<zef:lizmat> {
             elsif %valid{$id} -> %meta {
                 my $name     := %meta<name>;
                 my $identity := %meta<dist>;
+                %meta<source-url> :=
+                  rea-download-URL $name,$identity,extension($path);
                 my $json     := self!make-json-io($name, $identity);
                 if self!archive-distribution(
                   "$cpan-base-url/authors/$path",
