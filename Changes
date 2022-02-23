@@ -2,6 +2,9 @@ Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
 
+0.0.13  2022-02-23T19:56:10+01:00
+    - Make sure source-urls also URL-escape colons
+
 0.0.12  2022-02-10T20:15:09+01:00
     - Upped several dependencies for the latest goodies
 
