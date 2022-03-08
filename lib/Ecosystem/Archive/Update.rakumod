@@ -18,7 +18,7 @@ sub meta-to-io(%distribution, $io) {
 # version
 sub meta-from-text($text) { try from-json $text }
 
-class Ecosystem::Archive::Update:ver<0.0.13>:auth<zef:lizmat> {
+class Ecosystem::Archive::Update:ver<0.0.14>:auth<zef:lizmat> {
     has $.shelves      is built(:bind);
     has $.jsons        is built(:bind);
     has $.degree       is built(:bind);
@@ -411,14 +411,18 @@ class Ecosystem::Archive::Update:ver<0.0.13>:auth<zef:lizmat> {
                                             ::("&$base\-download-URL")(
                                               $user, $repo, $branch
                                             ),
-                                            $name, $identity, '.tar.gz'
+                                            self!make-shelf-io(
+                                              $name, $identity, '.tar.gz'
+                                            )
                                           )
                                     }) {
                                         meta-to-io(%meta,$json);
                                         $result := $identity => %meta # NEW!
                                     }
+                                    else {
+                                       self.note: "no valid branch found";
+                                    }
                                 }
-
                             }
                         }
                         else {
