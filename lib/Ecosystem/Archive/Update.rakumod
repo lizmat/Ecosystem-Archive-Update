@@ -18,7 +18,7 @@ sub meta-to-io(%distribution, $io) {
 # version
 sub meta-from-text($text) { try from-json $text }
 
-class Ecosystem::Archive::Update:ver<0.0.14>:auth<zef:lizmat> {
+class Ecosystem::Archive::Update:ver<0.0.15>:auth<zef:lizmat> {
     has $.shelves      is built(:bind);
     has $.jsons        is built(:bind);
     has $.degree       is built(:bind);
@@ -346,15 +346,19 @@ class Ecosystem::Archive::Update:ver<0.0.14>:auth<zef:lizmat> {
         my $resp := await $!http-client.get:
           'https://raw.githubusercontent.com/Raku/ecosystem/master/META.list';
         my $text := await $resp.body;
+        my $lock := Lock.new;
+        my @failed-URLs;
+
         self!update-meta: $text.lines
           .race(:$!degree, :$!batch)
           .map: -> $URL {
+            CATCH {
+                $lock.protect: { @failed-URLs.push: $URL }
+                next
+            }
             my $result := Empty;
 
-            my $resp := {
-                CATCH { self.note: "problem with $URL" }
-                await $!http-client.get($URL)
-            }();
+            my $resp := await $!http-client.get($URL);
             my $text := await $resp.body;
             with meta-from-text($text) -> %meta {
                 my $name := %meta<name>;
@@ -441,6 +445,11 @@ class Ecosystem::Archive::Update:ver<0.0.14>:auth<zef:lizmat> {
                 self.note: "$URL: invalid JSON";
             }
             $result
+        }
+
+        if @failed-URLs {
+            note "Failed URLs:";
+            note "  $_" for @failed-URLs;
         }
     }
 

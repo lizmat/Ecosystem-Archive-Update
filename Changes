@@ -2,6 +2,9 @@ Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
 
+0.0.15  2022-04-29T12:26:39+02:00
+    - Handle failed git ecosystem URLs better, report on STDERR
+
 0.0.14  2022-03-08T15:40:10+01:00
     - Unbreak updating modules in p6c ecosystem, vrurg++ for the spot!
 
