@@ -2,7 +2,7 @@ use Cro::HTTP::Client:ver<0.8.7>;
 use JSON::Fast::Hyper:ver<0.0.3>:auth<zef:lizmat>;
 use paths:ver<10.0.2>:auth<zef:lizmat>;
 use Rakudo::CORE::META:ver<0.0.5+>:auth<zef:lizmat>;
-use Identity::Utils:ver<0.0.9>:auth<zef:lizmat>;
+use Identity::Utils:ver<0.0.10>:auth<zef:lizmat>;
 
 # Locally stored JSON files are assumed to be correct
 sub meta-from-io($io) { from-json $io.slurp } # , :immutable }
@@ -18,7 +18,7 @@ sub meta-to-io(%distribution, $io) {
 # version
 sub meta-from-text($text) { try from-json $text }
 
-class Ecosystem::Archive::Update:ver<0.0.15>:auth<zef:lizmat> {
+class Ecosystem::Archive::Update:ver<0.0.16>:auth<zef:lizmat> {
     has $.shelves      is built(:bind);
     has $.jsons        is built(:bind);
     has $.degree       is built(:bind);
@@ -91,10 +91,17 @@ class Ecosystem::Archive::Update:ver<0.0.15>:auth<zef:lizmat> {
     sub gitlab-download-URL($user, $repo, $tag = 'master') {
         "https://gitlab.com/$user/$repo/-/archive/$tag/$repo-$tag.tar.gz"
     }
+    sub url-encode($url) {
+        $url
+          .subst('%','%25',:g)
+          .subst('<','%3C',:g)
+          .subst('>','%3E',:g)
+          .subst(':','%3A',:g)
+          .subst('&','%2A',:g)
+    }
     sub rea-download-URL($name, $identity, $extension) {
-        'https://raw.githubusercontent.com/raku/REA/main/archive/' ~
+        url-encode 'https://raw.githubusercontent.com/raku/REA/main/archive/' ~
           "$name.substr(0,1).uc()/$name/$identity$extension"
-          .subst('<','%3C',:g).subst('>','%3E',:g).subst(':','%3A',:g)
     }
 
     sub sort-identities(@identities) {
@@ -836,6 +843,10 @@ Elizabeth Mattijsen <liz@raku.rocks>
 
 Source can be located at: https://github.com/lizmat/Ecosystem-Archive-Update .
 Comments and Pull Requests are welcome.
+
+If you like this module, or what I’m doing more generally, committing to a
+L<small sponsorship|https://github.com/sponsors/lizmat/>  would mean a great
+deal to me!
 
 =head1 COPYRIGHT AND LICENSE
 
