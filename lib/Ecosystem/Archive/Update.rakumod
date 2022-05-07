@@ -18,7 +18,7 @@ sub meta-to-io(%distribution, $io) {
 # version
 sub meta-from-text($text) { try from-json $text }
 
-class Ecosystem::Archive::Update:ver<0.0.16>:auth<zef:lizmat> {
+class Ecosystem::Archive::Update:ver<0.0.17>:auth<zef:lizmat> {
     has $.shelves      is built(:bind);
     has $.jsons        is built(:bind);
     has $.degree       is built(:bind);
@@ -97,7 +97,7 @@ class Ecosystem::Archive::Update:ver<0.0.16>:auth<zef:lizmat> {
           .subst('<','%3C',:g)
           .subst('>','%3E',:g)
           .subst(':','%3A',:g)
-          .subst('&','%2A',:g)
+          .subst('*','%2A',:g)
     }
     sub rea-download-URL($name, $identity, $extension) {
         url-encode 'https://raw.githubusercontent.com/raku/REA/main/archive/' ~

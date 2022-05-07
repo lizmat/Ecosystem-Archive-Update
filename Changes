@@ -2,6 +2,9 @@ Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
 
+0.0.17  2022-05-07T11:48:40+02:00
+    - Need to escape *, not &
+
 0.0.16  2022-05-06T15:38:16+02:00
     - Up dependency on Identity-Utils
     - Make sure % and * are also URL encoded in download URLs
