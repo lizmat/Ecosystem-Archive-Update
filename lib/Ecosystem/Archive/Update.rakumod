@@ -18,7 +18,7 @@ sub meta-to-io(%distribution, $io) {
 # version
 sub meta-from-text($text) { try from-json $text }
 
-class Ecosystem::Archive::Update:ver<0.0.17>:auth<zef:lizmat> {
+class Ecosystem::Archive::Update:ver<0.0.18>:auth<zef:lizmat> {
     has $.shelves      is built(:bind);
     has $.jsons        is built(:bind);
     has $.degree       is built(:bind);
@@ -92,7 +92,7 @@ class Ecosystem::Archive::Update:ver<0.0.17>:auth<zef:lizmat> {
         "https://gitlab.com/$user/$repo/-/archive/$tag/$repo-$tag.tar.gz"
     }
     sub url-encode($url) {
-        $url
+        'https://' ~ $url.substr(8)
           .subst('%','%25',:g)
           .subst('<','%3C',:g)
           .subst('>','%3E',:g)

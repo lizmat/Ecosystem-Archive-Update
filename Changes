@@ -2,6 +2,9 @@ Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
 
+0.0.18  2022-05-10T14:28:53+02:00
+    - Fix over-eager escaping of ":"
+
 0.0.17  2022-05-07T11:48:40+02:00
     - Need to escape *, not &
 
