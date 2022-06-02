@@ -1,15 +1,30 @@
-use Cro::HTTP::Client:ver<0.8.7>;
 use JSON::Fast::Hyper:ver<0.0.3>:auth<zef:lizmat>;
 use paths:ver<10.0.2>:auth<zef:lizmat>;
 use Rakudo::CORE::META:ver<0.0.5+>:auth<zef:lizmat>;
 use Identity::Utils:ver<0.0.10>:auth<zef:lizmat>;
 
 # Locally stored JSON files are assumed to be correct
-sub meta-from-io($io) { from-json $io.slurp } # , :immutable }
+my sub meta-from-io(IO::Path:D $io) { from-json $io.slurp, :immutable }
 
 # Store given distribution at given io
-sub meta-to-io(%distribution, $io) {
+my sub meta-to-io(%distribution, IO::Path:D $io) {
     $io.spurt: to-json %distribution, :!pretty, :sorted-keys
+}
+
+# very basic URL fetcher
+my sub GET(Str:D $url) {
+    (run 'curl', '-k', '-s', '-f', $url, :out).out.slurp || Nil
+}
+# very basic remote JSON fetcher
+my sub meta-from-URL(Str:D $URL) {
+    with GET($URL) {
+        try from-json $_
+    }
+}
+# very basic file to IO fetcher
+my sub URL-to-io(Str:D $url, IO::Path:D $io) {
+    (run 'curl', '-k', '-s', '-f', '--output', $io.absolute, $url, :out)
+      .out.slurp || Nil
 }
 
 # Parsing JSON from text may get garbage, and may need adaptations
@@ -18,12 +33,11 @@ sub meta-to-io(%distribution, $io) {
 # version
 sub meta-from-text($text) { try from-json $text }
 
-class Ecosystem::Archive::Update:ver<0.0.18>:auth<zef:lizmat> {
+class Ecosystem::Archive::Update {
     has $.shelves      is built(:bind);
     has $.jsons        is built(:bind);
     has $.degree       is built(:bind);
     has $.batch        is built(:bind);
-    has $.http-client  is built(:bind) = default-http-client;
     has %.identities   is built(False);
     has @!notes;
     has str  $!meta-as-json = "";
@@ -61,15 +75,10 @@ class Ecosystem::Archive::Update:ver<0.0.18>:auth<zef:lizmat> {
         }
     }
 
-    sub default-http-client() {
-        Cro::HTTP::Client.new(
-          user-agent => $?CLASS.^name ~ ' ' ~ $?CLASS.^ver,
-          :http<1.1>,  # for now
-        )
-    }
-
     my constant $zef-base-url  = 'https://360.zef.pm';
     my constant $cpan-base-url = 'http://www.cpan.org';
+    my constant $git-base-url =
+      'https://raw.githubusercontent.com/Raku/ecosystem/master/META.list';
     my constant @extensions = <.meta .tar.gz .tgz .zip>;
 
     sub no-extension($string) {
@@ -160,49 +169,55 @@ class Ecosystem::Archive::Update:ver<0.0.18>:auth<zef:lizmat> {
     }
 
     method !update-zef($force-json --> Nil) {
-        my $resp := await $!http-client.get('https://360.zef.pm');
-        self!update-meta: (await $resp.body)
-          .race(:$!degree, :$!batch)
-          .map: -> %meta {
-            my $identity := %meta<dist>;
-            if !$identity.contains(':api<') && %meta<api> -> $api {
-                unless $api eq "0" {
-                    $identity := $identity ~ ":api<$api>";
-                    %meta<dist> := $identity;
+        if meta-from-URL($zef-base-url) -> @metas {
+            self!update-meta: @metas
+              .race(:$!degree, :$!batch)
+              .map: -> %meta {
+                my $identity := %meta<dist>;
+                if !$identity.contains(':api<') && %meta<api> -> $api {
+                    unless $api eq "0" {
+                        $identity := $identity ~ ":api<$api>";
+                        %meta<dist> := $identity;
+                    }
                 }
-            }
 
-            my $path := %meta<path>:delete;
-            my $name := %meta<name>;
-            %meta<source-url> :=
-              rea-download-URL $name,$identity,extension($path);
-            my $json  := self!make-json-io:  $name, $identity;
-            my $shelf := self!make-shelf-io: $name, $identity, extension($path);
-            if $json.e {
-                if $force-json {
-                    %meta<release-date> := self!distribution2yyyy-mm-dd($shelf);
+                my $path := %meta<path>:delete;
+                my $name := %meta<name>;
+                %meta<source-url> :=
+                  rea-download-URL $name,$identity,extension($path);
+                my $json  := self!make-json-io:  $name, $identity;
+                my $shelf := self!make-shelf-io:
+                  $name, $identity, extension($path);
+                if $json.e {
+                    if $force-json {
+                        %meta<release-date> :=
+                          self!distribution2yyyy-mm-dd($shelf);
+                        meta-to-io(%meta, $json);
+                        $identity => %meta;
+                    }
+
+                    # The meta provided by fez backend does not provide
+                    # release-date, so we need to fall back to locally
+                    # stored META, just as in the other backends.
+                    else {
+                        $identity => from-json($json.slurp)
+                    }
+                }
+                elsif self!archive-distribution(
+                  "$zef-base-url/$path", $shelf
+                ) -> $release-date {
+                    %meta<release-date> := $release-date;
                     meta-to-io(%meta, $json);
-                    $identity => %meta;
+                    $identity => %meta
                 }
-
-                # The meta provided by fez backend does not provide
-                # release-date, so we need to fall back to locally
-                # stored META, just as in the other backends.
                 else {
-                    $identity => from-json($json.slurp)
+                    self.note: "Failed to archive $identity";
+                Empty
                 }
             }
-            elsif self!archive-distribution(
-              "$zef-base-url/$path", $shelf
-            ) -> $release-date {
-                %meta<release-date> := $release-date;
-                meta-to-io(%meta, $json);
-                $identity => %meta
-            }
-            else {
-                self.note: "Failed to archive $identity";
-                Empty
-            }
+        }
+        else {
+            die "Failed to get meta from $zef-base-url";
         }
     }
 
@@ -249,8 +264,7 @@ class Ecosystem::Archive::Update:ver<0.0.18>:auth<zef:lizmat> {
                 # from CPAN.  Since we're sunsetting CPAN as a backend, this
                 # should not really be an issue long-term.
                 my $URL  := "$cpan-base-url/authors/$path";
-                my $resp := await $!http-client.get($URL);
-                my $text := (await $resp.body).decode;
+                my $text := GET($URL);
                 with meta-from-text($text) -> %meta {
 
                     # Version encoded in path has priority over version in
@@ -350,9 +364,7 @@ class Ecosystem::Archive::Update:ver<0.0.18>:auth<zef:lizmat> {
     }
 
     method !update-git($force-json --> Nil) {
-        my $resp := await $!http-client.get:
-          'https://raw.githubusercontent.com/Raku/ecosystem/master/META.list';
-        my $text := await $resp.body;
+        my $text := GET $git-base-url;
         my $lock := Lock.new;
         my @failed-URLs;
 
@@ -365,8 +377,7 @@ class Ecosystem::Archive::Update:ver<0.0.18>:auth<zef:lizmat> {
             }
             my $result := Empty;
 
-            my $resp := await $!http-client.get($URL);
-            my $text := await $resp.body;
+            my $text := GET $URL;
             with meta-from-text($text) -> %meta {
                 my $name := %meta<name>;
                 if $name && $name.contains(' ') {
@@ -500,8 +511,7 @@ class Ecosystem::Archive::Update:ver<0.0.18>:auth<zef:lizmat> {
                 self.note: "$URL failed to load";
                 return Nil;
             }
-            my $resp := await $!http-client.get($URL);
-            $io.spurt(await $resp.body);
+            URL-to-io $URL, $io;
             self!distribution2yyyy-mm-dd($io)
         }
     }
@@ -604,7 +614,6 @@ use Ecosystem::Archive::Update;
 my $ea = Ecosystem::Archive::Update.new(
   shelves     => 'archive',
   jsons       => 'meta',
-  http-client => default-http-client
 );
 
 say "Archive has $ea.meta.elems() identities:";
@@ -636,11 +645,6 @@ The name (or an C<IO> object) of a directory in which to store C<META6.json>
 files as downloaded.  This is usually a symlink to the "meta" directory of
 the actual L<Raku Ecosystem Archive repository|https://github.com/lizmat/REA>.
 The default is 'meta', aka the 'meta' subdirectory from the current directory.
-
-=item http-client
-
-The C<Cro::HTTP::Client> object to do downloads with.  Defaults to a
-C<Cro::HTTP::Client> object that advertises this module as its User-Agent.
 
 =item degree
 
@@ -685,17 +689,6 @@ say "Using $ea.degree() CPUs";
 =end code
 
 The number of CPU cores that will be used in parallel processing.
-
-=head2 http-client
-
-=begin code :lang<raku>
-
-say "Information fetched as '$ea.http-client.user-agent()'";
-
-=end code
-
-The C<Cro::HTTP::Client> object that is used for downloading information
-from the Internet.
 
 =head2 investigate-repo
 

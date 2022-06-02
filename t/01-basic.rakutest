@@ -16,7 +16,7 @@ is $ea.jsons,   $jsons,   'did we get the right meta dir';
 
 is $ea.identities.elems, 12, 'did we get right number of identities';
 
-is-deeply $ea.identities.keys.grep(!*.starts-with("CORE:")).sort, <
+is-deeply $ea.identities.keys.grep(!*.starts-with("CORE:" | "rakudo")).sort, <
   P5study:ver<0.0.3>:auth<cpan:ELIZABETH>
   P5study:ver<0.0.4>:auth<cpan:ELIZABETH>
   P5study:ver<0.0.5>:auth<cpan:ELIZABETH>
@@ -33,7 +33,7 @@ is-deeply $ea.identities.keys.grep(!*.starts-with("CORE:")).sort, <
 # Since hashes have indeterminate order, it's hard to compare the
 # resulting JSON.  But in whichever order it is rendered, the total
 # length of the JSON should be always the same for the test set.
-is $ea.meta-as-json.chars, 7131, 'did we get correct json data';
+is $ea.meta-as-json.chars, 7207, 'did we get correct json data';
 
 $ea.note: "foo";
 is $ea.notes.elems, 1, 'did the first note get added';

@@ -2,6 +2,11 @@ Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
 
+0.0.19  2022-06-02T17:44:36+02:00
+    - Remove dependency on Cro::HTTP, it was just adding too many
+      dependencies.  Instead, just use good old `curl`.
+    - Upped version of Rakudo::CORE::META, and adapted tests accordingly.
+
 0.0.18  2022-05-10T14:28:53+02:00
     - Fix over-eager escaping of ":"
 

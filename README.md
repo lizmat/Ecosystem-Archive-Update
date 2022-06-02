@@ -14,7 +14,6 @@ use Ecosystem::Archive::Update;
 my $ea = Ecosystem::Archive::Update.new(
   shelves     => 'archive',
   jsons       => 'meta',
-  http-client => default-http-client
 );
 
 say "Archive has $ea.meta.elems() identities:";
@@ -36,10 +35,6 @@ The name (or an `IO` object) of a directory in which to place distributions. Thi
   * jsons
 
 The name (or an `IO` object) of a directory in which to store `META6.json` files as downloaded. This is usually a symlink to the "meta" directory of the actual [Raku Ecosystem Archive repository](https://github.com/lizmat/REA). The default is 'meta', aka the 'meta' subdirectory from the current directory.
-
-  * http-client
-
-The `Cro::HTTP::Client` object to do downloads with. Defaults to a `Cro::HTTP::Client` object that advertises this module as its User-Agent.
 
   * degree
 
@@ -79,15 +74,6 @@ say "Using $ea.degree() CPUs";
 ```
 
 The number of CPU cores that will be used in parallel processing.
-
-http-client
------------
-
-```raku
-say "Information fetched as '$ea.http-client.user-agent()'";
-```
-
-The `Cro::HTTP::Client` object that is used for downloading information from the Internet.
 
 investigate-repo
 ----------------
