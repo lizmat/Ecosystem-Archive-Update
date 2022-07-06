@@ -13,7 +13,7 @@ my sub meta-to-io(%distribution, IO::Path:D $io) {
 
 # very basic URL fetcher
 my sub GET(Str:D $url) {
-    (run 'curl', '-k', '-s', '-f', $url, :out).out.slurp || Nil
+    (run 'curl', '-L', '-k', '-s', '-f', $url, :out).out.slurp || Nil
 }
 # very basic remote JSON fetcher
 my sub meta-from-URL(Str:D $URL) {
@@ -23,7 +23,7 @@ my sub meta-from-URL(Str:D $URL) {
 }
 # very basic file to IO fetcher
 my sub URL-to-io(Str:D $url, IO::Path:D $io) {
-    (run 'curl', '-k', '-s', '-f', '--output', $io.absolute, $url, :out)
+    (run 'curl', '-L', '-k', '-s', '-f', '--output', $io.absolute, $url, :out)
       .out.slurp || Nil
 }
 

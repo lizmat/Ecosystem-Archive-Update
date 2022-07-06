@@ -2,6 +2,9 @@ Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
 
+0.0.20  2022-07-06T15:14:22+02:00
+    - Make sure that redirects are being followed
+
 0.0.19  2022-06-02T17:44:36+02:00
     - Remove dependency on Cro::HTTP, it was just adding too many
       dependencies.  Instead, just use good old `curl`.
