@@ -33,7 +33,6 @@ is-deeply $ea.identities.keys.grep(!*.starts-with("CORE:" | "rakudo")).sort, <
 # Since hashes have indeterminate order, it's hard to compare the
 # resulting JSON.  But in whichever order it is rendered, the total
 # length of the JSON should be always the same for the test set.
-diag $ea.meta-as-json unless
 is $ea.meta-as-json.chars, 7207, 'did we get correct json data';
 
 $ea.note: "foo";
