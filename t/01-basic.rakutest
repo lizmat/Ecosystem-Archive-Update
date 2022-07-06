@@ -1,7 +1,7 @@
 use Test;
 use Ecosystem::Archive::Update;
 
-plan 14;
+plan 13;
 
 my $shelves := $*PROGRAM.sibling("archive");
 my $jsons   := $*PROGRAM.sibling("meta");
@@ -29,11 +29,6 @@ is-deeply $ea.identities.keys.grep(!*.starts-with("CORE:" | "rakudo")).sort, <
   eigenstates:ver<0.0.6>:auth<zef:lizmat>
   eigenstates:ver<0.0.7>:auth<zef:lizmat>
 >, 'did we get the right identities';
-
-# Since hashes have indeterminate order, it's hard to compare the
-# resulting JSON.  But in whichever order it is rendered, the total
-# length of the JSON should be always the same for the test set.
-is $ea.meta-as-json.chars, 7173, 'did we get correct json data';
 
 $ea.note: "foo";
 is $ea.notes.elems, 1, 'did the first note get added';
