@@ -2,6 +2,11 @@ Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
 
+0.0.23  2022-09-07T11:18:57+02:00
+    - Test the "main" branch before the "master" branch when harvesting
+      the p6c ecosystem: assuming that developers will switch from "master"
+      to "main" rather than the other way around.  Spotted by ugexe++
+
 0.0.22  2022-07-06T20:14:48+02:00
     - Drop meta-as-json test, it was too finicky in different CI's
 

@@ -428,7 +428,7 @@ class Ecosystem::Archive::Update {
 # likeliness to succeed, and write the meta info as soon as we could download
 # a tar file.
                                 else {
-                                    if <master main dev>.first(-> $branch {
+                                    if <main master dev>.first(-> $branch {
                                           try self!archive-distribution(
                                             ::("&$base\-download-URL")(
                                               $user, $repo, $branch
