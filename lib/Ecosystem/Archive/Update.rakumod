@@ -1,7 +1,8 @@
-use JSON::Fast::Hyper:ver<0.0.3>:auth<zef:lizmat>;
-use paths:ver<10.0.2>:auth<zef:lizmat>;
-use Rakudo::CORE::META:ver<0.0.5+>:auth<zef:lizmat>;
+use JSON::Fast::Hyper:ver<0.0.5>:auth<zef:lizmat>;
+use paths:ver<10.0.9>:auth<zef:lizmat>;
+use Rakudo::CORE::META:ver<0.0.9+>:auth<zef:lizmat>;
 use Identity::Utils:ver<0.0.10>:auth<zef:lizmat>;
+
 
 # Locally stored JSON files are assumed to be correct
 my sub meta-from-io(IO::Path:D $io) { from-json $io.slurp, :immutable }
@@ -843,7 +844,7 @@ deal to me!
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2021, 2022 Elizabeth Mattijsen
+Copyright 2021, 2022, 2023 Elizabeth Mattijsen
 
 This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
 

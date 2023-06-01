@@ -2,6 +2,9 @@ Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
 
+0.0.24  2023-06-01T12:31:49+02:00
+    - Update several dependencies
+
 0.0.23  2022-09-07T11:18:57+02:00
     - Test the "main" branch before the "master" branch when harvesting
       the p6c ecosystem: assuming that developers will switch from "master"
