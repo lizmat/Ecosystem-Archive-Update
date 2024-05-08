@@ -1,7 +1,7 @@
 use JSON::Fast::Hyper:ver<0.0.5>:auth<zef:lizmat>;
 use paths:ver<10.0.9>:auth<zef:lizmat>;
 use Rakudo::CORE::META:ver<0.0.9+>:auth<zef:lizmat>;
-use Identity::Utils:ver<0.0.10>:auth<zef:lizmat>;
+use Identity::Utils:ver<0.0.11+>:auth<zef:lizmat>;
 
 
 # Locally stored JSON files are assumed to be correct
@@ -844,7 +844,7 @@ deal to me!
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2021, 2022, 2023 Elizabeth Mattijsen
+Copyright 2021, 2022, 2023, 2024 Elizabeth Mattijsen
 
 This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
 
