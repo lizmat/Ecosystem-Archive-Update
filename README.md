@@ -1,4 +1,4 @@
-[![Actions Status](https://github.com/lizmat/Ecosystem-Archive-Update/workflows/test/badge.svg)](https://github.com/lizmat/Ecosystem-Archive-Update/actions)
+[![Actions Status](https://github.com/lizmat/Ecosystem-Archive-Update/actions/workflows/linux.yml/badge.svg)](https://github.com/lizmat/Ecosystem-Archive-Update/actions) [![Actions Status](https://github.com/lizmat/Ecosystem-Archive-Update/actions/workflows/macos.yml/badge.svg)](https://github.com/lizmat/Ecosystem-Archive-Update/actions) [![Actions Status](https://github.com/lizmat/Ecosystem-Archive-Update/actions/workflows/windows.yml/badge.svg)](https://github.com/lizmat/Ecosystem-Archive-Update/actions)
 
 NAME
 ====

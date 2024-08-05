@@ -1,6 +1,10 @@
 Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
+    - No longer update modules from the "p6c" system
+    - Update dependency on JSON::Fast::Hyper
+    - Give each OS its own CI badge
+    - Add sponsor button
 
 0.0.25  2024-05-08T16:05:01+02:00
     - Update several dependencies
