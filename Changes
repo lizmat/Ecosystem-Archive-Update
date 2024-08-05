@@ -1,6 +1,8 @@
 Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
+
+0.0.26  2024-08-05T18:49:44+02:00
     - No longer update modules from the "p6c" system
     - Update dependency on JSON::Fast::Hyper
     - Give each OS its own CI badge
