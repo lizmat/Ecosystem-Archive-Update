@@ -1,6 +1,8 @@
 Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
+
+0.0.27  2024-09-25T17:41:12+02:00
     - Add dependency on META::verauthapi
     - Upped dependencies where possible
     - Make sure that ^ver ^auth ^api are set correctly on classes

@@ -22,9 +22,11 @@
   "resources": [
   ],
   "source-url": "https://github.com/lizmat/Ecosystem-Archive-Update.git",
-  "tags": [ "REA", "ECOSYSTEM"
+  "tags": [
+    "REA",
+    "ECOSYSTEM"
   ],
   "test-depends": [
   ],
-  "version": "0.0.26"
+  "version": "0.0.27"
 }
