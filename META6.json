@@ -6,10 +6,11 @@
   "build-depends": [
   ],
   "depends": [
-    "JSON::Fast::Hyper:ver<0.0.6>:auth<zef:lizmat>",
-    "paths:ver<10.0.9>:auth<zef:lizmat>",
+    "JSON::Fast::Hyper:ver<0.0.9+>:auth<zef:lizmat>",
+    "paths:ver<10.1+>:auth<zef:lizmat>",
     "Rakudo::CORE::META:ver<0.0.9+>:auth<zef:lizmat>",
-    "Identity::Utils:ver<0.0.11+>:auth<zef:lizmat>"
+    "Identity::Utils:ver<0.0.11+>:auth<zef:lizmat>",
+    "META::verauthapi:ver<0.0.1+>:auth<zef:lizmat"
   ],
   "description": "Updating the Raku Ecosystem Archive",
   "license": "Artistic-2.0",
@@ -21,7 +22,7 @@
   "resources": [
   ],
   "source-url": "https://github.com/lizmat/Ecosystem-Archive-Update.git",
-  "tags": [
+  "tags": [ "REA", "ECOSYSTEM"
   ],
   "test-depends": [
   ],

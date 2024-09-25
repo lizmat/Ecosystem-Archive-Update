@@ -1,6 +1,9 @@
 Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
+    - Add dependency on META::verauthapi
+    - Upped dependencies where possible
+    - Make sure that ^ver ^auth ^api are set correctly on classes
 
 0.0.26  2024-08-05T18:49:44+02:00
     - No longer update modules from the "p6c" system
