@@ -1,7 +1,7 @@
-use JSON::Fast::Hyper:ver<0.0.9+>:auth<zef:lizmat>;
+use JSON::Fast::Hyper:ver<0.0.10+>:auth<zef:lizmat>;
 use paths:ver<10.1+>:auth<zef:lizmat>;
-use Rakudo::CORE::META:ver<0.0.9+>:auth<zef:lizmat>;
-use Identity::Utils:ver<0.0.11+>:auth<zef:lizmat>;
+use Rakudo::CORE::META:ver<0.0.12+>:auth<zef:lizmat>;
+use SBOM::Raku:ver<0.0.11+>:auth<zef:lizmat>;
 
 # Locally stored JSON files are assumed to be correct
 my sub meta-from-io(IO::Path:D $io) { from-json $io.slurp, :immutable }
@@ -141,8 +141,8 @@ class Ecosystem::Archive::Update {
     method !update($force-json --> Nil) {
         await
 #          (start self!update-git($force-json)),
-          (start self!update-cpan($force-json)),
-          (start self!update-zef($force-json)),
+          (start quietly self!update-cpan($force-json)),
+          (start quietly self!update-zef($force-json)),
         ;
     }
 
