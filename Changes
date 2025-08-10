@@ -1,6 +1,8 @@
 Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
+
+0.0.28  2025-08-10T12:17:08+02:00
     - Add support for generating SBOMs of distributions
     - Add dependency on SBOM::Raku
     - Up dependencies where possible

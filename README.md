@@ -39,7 +39,7 @@ The name (or an `IO` object) of a directory in which to store `META6.json` files
 
   * :sboms
 
-The name (or an `IO` object) of a directory in which to store `CycloneDX SBOM` files as downloaded. This is usually a symlink to the "sbom" directory of the actual [Raku Ecosystem Archive repository](https://github.com/Raku/REA). The default is 'sbom', aka the 'sbom' subdirectory from the current directory.
+The name (or an `IO` object) of a directory in which to store [CycloneDX](https://cyclonedx.org) [SBOM](https://en.wikipedia.org/wiki/Software_supply_chain) files. This is usually a symlink to the "sbom" directory of the actual [Raku Ecosystem Archive repository](https://github.com/Raku/REA). The default is 'sbom', aka the 'sbom' subdirectory from the current directory.
 
   * :degree
 
@@ -171,7 +171,7 @@ indir $ea.sboms, {
 }
 ```
 
-The `IO` object of the directory in which the CycloneDX SBOM filesi are being stored. For instance the `IRC::Client` distribution:
+The `IO` object of the directory in which the [CycloneDX](https://cyclonedx.org) [SBOM](https://en.wikipedia.org/wiki/Software_supply_chain) files are being stored. For instance the `IRC::Client` distribution:
 
     sbom
       |- ...
