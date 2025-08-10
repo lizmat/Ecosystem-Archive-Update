@@ -1,7 +1,14 @@
 use JSON::Fast::Hyper:ver<0.0.10+>:auth<zef:lizmat>;
 use paths:ver<10.1+>:auth<zef:lizmat>;
 use Rakudo::CORE::META:ver<0.0.12+>:auth<zef:lizmat>;
-use SBOM::Raku:ver<0.0.11+>:auth<zef:lizmat>;
+
+use Identity::Utils:ver<0.0.28+>:auth<zef:lizmat> <
+  api auth build short-name ver version zef-index-url
+>;
+
+use SBOM::Raku:ver<0.0.11+>:auth<zef:lizmat> <
+  tar-sbom
+>;
 
 # Locally stored JSON files are assumed to be correct
 my sub meta-from-io(IO::Path:D $io) { from-json $io.slurp, :immutable }
@@ -36,6 +43,7 @@ sub meta-from-text($text) { try from-json $text }
 class Ecosystem::Archive::Update {
     has $.shelves      is built(:bind);
     has $.jsons        is built(:bind);
+    has $.sboms        is built(:bind);
     has $.degree       is built(:bind);
     has $.batch        is built(:bind);
     has %.identities   is built(False);
@@ -47,11 +55,13 @@ class Ecosystem::Archive::Update {
     method TWEAK(--> Nil) {
         $!shelves := 'archive'            without $!shelves;
         $!jsons   := 'meta'               without $!jsons;
+        $!sboms   := 'sbom'               without $!sboms;
         $!degree  := Kernel.cpu-cores / 2 without $!degree;
         $!batch   := 64                   without $!batch;
 
-        $!jsons    := $!jsons.IO;
-        $!shelves  := $!shelves.IO;
+        $!shelves := $!shelves.IO;
+        $!jsons   := $!jsons.IO;
+        $!sboms   := $!sboms.IO;
 
         $!meta-lock := Lock.new;
         $!note-lock := Lock.new;
@@ -75,7 +85,7 @@ class Ecosystem::Archive::Update {
         }
     }
 
-    my constant $zef-base-url  = 'https://360.zef.pm';
+    my constant $zef-base-url  = zef-index-url;
     my constant $cpan-base-url = 'http://www.cpan.org';
     my constant $git-base-url =
       'https://raw.githubusercontent.com/Raku/ecosystem/master/META.list';
@@ -141,8 +151,8 @@ class Ecosystem::Archive::Update {
     method !update($force-json --> Nil) {
         await
 #          (start self!update-git($force-json)),
-          (start quietly self!update-cpan($force-json)),
-          (start quietly self!update-zef($force-json)),
+          (start self!update-cpan($force-json)),
+          (start self!update-zef($force-json)),
         ;
     }
 
@@ -503,15 +513,22 @@ class Ecosystem::Archive::Update {
     method !archive-distribution($URL, $io) {
         # Don't load if we already have it (it's static!), and assume that
         # the META is already up-to-date.
-        if $io.e {
-            Nil
-        }
-        else {
+        return Nil if $io.e;
+
+        {
             CATCH {
                 self.note: "$URL failed to load";
                 return Nil;
             }
             URL-to-io $URL, $io;
+        }
+        if $io.e {
+            with try tar-sbom($io) -> $sbom {
+                my $sbom-io :=
+                  $!sboms.add($io.subst($io.parent(3) ~ "/") ~ ".cdx.json");
+                mkdir $sbom-io.parent;
+                $sbom-io.spurt($sbom.JSON);
+            }
             self!distribution2yyyy-mm-dd($io)
         }
     }
@@ -603,255 +620,5 @@ class Ecosystem::Archive::Update {
 use META::verauthapi:ver<0.0.1+>:auth<zef:lizmat> $?DISTRIBUTION,
   Ecosystem::Archive::Update
 ;
-
-=begin pod
-
-=head1 NAME
-
-Ecosystem::Archive::Update - Updating the Raku Ecosystem Archive
-
-=head1 SYNOPSIS
-
-=begin code :lang<raku>
-
-use Ecosystem::Archive::Update;
-
-my $ea = Ecosystem::Archive::Update.new(
-  shelves     => 'archive',
-  jsons       => 'meta',
-);
-
-say "Archive has $ea.meta.elems() identities:";
-.say for $ea.meta.keys.sort;
-
-=end code
-
-=head1 DESCRIPTION
-
-Ecosystem::Archive::Update provides the basic logic to updating the Raku
-Ecosystem Archive, a place where (almost) every distribution ever available
-in the Raku Ecosystem, can be obtained even after it has been removed
-(specifically in the case of the old ecosystem master list and the
-distributions kept on CPAN).
-
-=head2 ARGUMENTS
-
-=item shelves
-
-The name (or an C<IO> object) of a directory in which to place distributions.
-This is usually a symlink to the "archive" directory of the actual
-L<Raku Ecosystem Archive repository|https://github.com/lizmat/REA>.
-The default is 'archive', aka the 'archive' subdirectory from the current
-directory.
-
-=item jsons
-
-The name (or an C<IO> object) of a directory in which to store C<META6.json>
-files as downloaded.  This is usually a symlink to the "meta" directory of
-the actual L<Raku Ecosystem Archive repository|https://github.com/lizmat/REA>.
-The default is 'meta', aka the 'meta' subdirectory from the current directory.
-
-=item degree
-
-The number of CPU cores that may be used for parallel processing.  Defaults
-to the B<half> number of C<Kernel.cpu-cores>.
-
-=item batch
-
-The number of objects to be processed in parallel per batch.  Defaults to
-B<64>.
-
-=head1 METHODS
-
-=head2 batch
-
-=begin code :lang<raku>
-
-say "Processing with batches of $ea.batch() objects in parallel";
-
-=end code
-
-The number of objects per batch that will be used in parallel processing.
-
-=head2 clear-notes
-
-=begin code :lang<raku>
-
-my @cleared = $ea.clear-notes;
-say "All notes have been cleared";
-
-=end code
-
-Returns the C<notes> of the object as a C<List>, and removes them from the
-object.
-
-=head2 degree
-
-=begin code :lang<raku>
-
-say "Using $ea.degree() CPUs";
-
-=end code
-
-The number of CPU cores that will be used in parallel processing.
-
-=head2 investigate-repo
-
-=begin code :lang<raku>
-
-my @found = $ea.investigate-repo($url, "lizmat");
-
-=end code
-
-Performs a C<git clone> on the given URL, scans the repo for changes in the
-C<META6.json> file that would change the version, and downloads and saves
-a tar-file of the repository (and the associated META information in
-C<git-meta>) at that state of the repository.
-
-The second positional parameter indicates the default C<auth> value to be
-applied to any JSON information, if no C<auth> value is found or it is
-invalid.
-
-Only C<Github> and C<Gitlab> URLs are currently supported.
-
-Returns a list of C<Pair>s of the distributions that were added,  with the
-identity as the key, and the META information hash as the value.
-
-Updates the C<.meta> information in a thread-safe manner.
-
-=head2 jsons
-
-=begin code :lang<raku>
-
-indir $ea.jsons, {
-    my $jsons = (shell 'ls */*', :out).out.lines.elems;
-    say "$jsons different distributions";
-}
-
-=end code
-
-The C<IO> object of the directory in which the JSON meta files are being
-stored.  For instance the C<IRC::Client> distribution:
-
-  meta
-    |- ...
-    |- I
-       |- ...
-       |- IRC::Client
-           |- IRC::Client:ver<1.001001>:auth<github:zoffixznet>.json
-           |- IRC::Client:ver<1.002001>:auth<github:zoffixznet>.json
-           |- ...
-           |- IRC::Client:ver<3.007010>:auth<github:zoffixznet>.json
-           |- IRC::Client:ver<3.007011>:auth<cpan:ELIZABETH>.json
-           |- IRC::Client:ver<3.009990>:auth<cpan:ELIZABETH>.json
-       |- ...
-    |- ...
-
-=head2 identities
-
-=begin code :lang<raku>
-
-say "Archive has $ea.identities.elems() identities, they are:";
-.say for $ea.identities.keys.sort;
-
-=end code
-
-Returns a hash of all of the META information of all distributions, keyed
-by identity (for example "Module::Name:ver<0.1>:auth<foo:bar>:api<1>").
-The value is a hash obtained from the distribution's meta data.
-
-=head2 meta-as-json
-
-=begin code :lang<raku>
-
-say $ea.meta-as-json;  # at least 3MB of text
-
-=end code
-
-Returns the JSON of all the currently known meta-information.  The
-JSON is ordered by identity in the top level array.
-
-=head2 note
-
-=begin code :lang<raku>
-
-$ea.note("something's wrong");
-
-=end code
-
-Add a note to the C<notes> of the object.
-
-=head2 notes
-
-=begin code :lang<raku>
-
-say "Found $ea.notes.elems() notes:";
-.say for $ea.notes;
-
-=end code
-
-Returns the C<notes> of the object as a C<List>.
-
-=head2 shelves
-
-=begin code :lang<raku>
-
-indir $ea.shelves, {
-    my $distro-names = (shell 'ls */*/*', :out).out.lines.elems;
-    say "$distro-names different distributions in archive";
-}
-
-=end code
-
-The C<IO> object of the directory where distributions are being stored
-in a subdirectory by the name of the module in the distribution.  For
-instance the C<silently> distribution:
-
-  archive
-   |- ...
-   |- S
-      |- ...
-      |- silently
-          |- silently:ver<0.0.1>:auth<cpan:ELIZABETH>.tar.gz
-          |- silently:ver<0.0.2>:auth<cpan:ELIZABETH>.tar.gz
-          |- silently:ver<0.0.3>:auth<cpan:ELIZABETH>.tar.gz
-          |- silently:ver<0.0.4>:auth<zef:lizmat>.tar.gz
-      |- ...
-   |- ...
-
-Note that a subdirectory will contain B<all> distributions of the name,
-regardless of version, authority or API value.
-
-=head2 update
-
-=begin code :lang<raku>
-
-my %updated = $ea.update;
-
-=end code
-
-Updates all the meta-information and downloads any new distributions.
-Returns a hash with the identities and the meta info of any distributions
-that were not seen before.  Also updates the C<.identities> information in
-a thread-safe manner.
-
-=head1 AUTHOR
-
-Elizabeth Mattijsen <liz@raku.rocks>
-
-Source can be located at: https://github.com/lizmat/Ecosystem-Archive-Update .
-Comments and Pull Requests are welcome.
-
-If you like this module, or what I’m doing more generally, committing to a
-L<small sponsorship|https://github.com/sponsors/lizmat/>  would mean a great
-deal to me!
-
-=head1 COPYRIGHT AND LICENSE
-
-Copyright 2021, 2022, 2023, 2024 Elizabeth Mattijsen
-
-This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
-
-=end pod
 
 # vim: expandtab shiftwidth=4

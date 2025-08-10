@@ -1,22 +1,25 @@
 use Test;
 use Ecosystem::Archive::Update;
 
-plan 13;
+plan 15;
 
 my $shelves := $*PROGRAM.sibling("archive");
 my $jsons   := $*PROGRAM.sibling("meta");
+my $sboms   := $*PROGRAM.sibling("sbom");
 
 ok $shelves.e, "do we have an archive to test with";
-ok $jsons.e,   "do we have a meta to test with";
+ok $jsons.e,   "do we have jsons to test with";
+ok $sboms.e,   "do we have sboms to test with";
 
-my $ea = Ecosystem::Archive::Update.new(:$shelves, :$jsons);
+my $ea = Ecosystem::Archive::Update.new(:$shelves, :$jsons, :$sboms);
 isa-ok $ea, Ecosystem::Archive::Update;
 is $ea.shelves, $shelves, 'did we get the right archive dir';
 is $ea.jsons,   $jsons,   'did we get the right meta dir';
+is $ea.sboms,   $sboms,   'did we get the right sbom dir';
 
 is $ea.identities.elems, 12, 'did we get right number of identities';
 
-is-deeply $ea.identities.keys.grep(!*.starts-with("CORE:" | "rakudo")).sort, <
+is-deeply $ea.identities.keys.grep(!*.starts-with("CORE:" | "Rakudo")).sort, <
   P5study:ver<0.0.3>:auth<cpan:ELIZABETH>
   P5study:ver<0.0.4>:auth<cpan:ELIZABETH>
   P5study:ver<0.0.5>:auth<cpan:ELIZABETH>

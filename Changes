@@ -1,11 +1,16 @@
 Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
+    - Add support for generating SBOMs of distributions
+    - Add dependency on SBOM::Raku
+    - Up dependencies where possible
+    - Update copyright year
 
 0.0.27  2024-09-25T17:41:12+02:00
     - Add dependency on META::verauthapi
-    - Upped dependencies where possible
-    - Make sure that ^ver ^auth ^api are set correctly on classes
+    - Up dependencies where possible
+    - Make sure that ^ver ^auth ^api are set correctly on
+      classes
 
 0.0.26  2024-08-05T18:49:44+02:00
     - No longer update modules from the "p6c" system
@@ -21,24 +26,25 @@ Revision history for Ecosystem-Archive-Update
     - Update several dependencies
 
 0.0.23  2022-09-07T11:18:57+02:00
-    - Test the "main" branch before the "master" branch when harvesting
-      the p6c ecosystem: assuming that developers will switch from "master"
-      to "main" rather than the other way around.  Spotted by ugexe++
+    - Test the "main" branch before the "master" branch
+      when harvesting the p6c ecosystem: assuming that
+      developers will switch from "master" to "main" rather
+      than the other way around.  Spotted by ugexe++
 
 0.0.22  2022-07-06T20:14:48+02:00
     - Drop meta-as-json test, it was too finicky in different CI's
 
 0.0.21  2022-07-06T15:58:04+02:00
     - Bump dependency on Rakudo::CORE::META to get tests passing on
-      Github Actions.
+      Github Actions
 
 0.0.20  2022-07-06T15:14:22+02:00
     - Make sure that redirects are being followed
 
 0.0.19  2022-06-02T17:44:36+02:00
     - Remove dependency on Cro::HTTP, it was just adding too many
-      dependencies.  Instead, just use good old `curl`.
-    - Upped version of Rakudo::CORE::META, and adapted tests accordingly.
+      dependencies.  Instead, just use good old `curl`
+    - Up version of Rakudo::CORE::META, and adapted tests accordingly
 
 0.0.18  2022-05-10T14:28:53+02:00
     - Fix over-eager escaping of ":"

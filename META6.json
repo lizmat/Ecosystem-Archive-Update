@@ -5,29 +5,39 @@
   ],
   "build-depends": [
   ],
-  "depends": [
-    "JSON::Fast::Hyper:ver<0.0.10+>:auth<zef:lizmat>",
-    "paths:ver<10.1+>:auth<zef:lizmat>",
-    "Rakudo::CORE::META:ver<0.0.12+>:auth<zef:lizmat>",
-    "Identity::Utils:ver<0.0.28+>:auth<zef:lizmat>",
-    "META::verauthapi:ver<0.0.1+>:auth<zef:lizmat>",
-    "SBOM::Raku:ver<0.0.11+>:auth<zef:lizmat>"
-  ],
+  "depends": {
+    "runtime": {
+      "requires": [
+        "JSON::Fast::Hyper:ver<0.0.10+>:auth<zef:lizmat>",
+        "paths:ver<10.1+>:auth<zef:lizmat>",
+        "Rakudo::CORE::META:ver<0.0.12+>:auth<zef:lizmat>",
+        "Identity::Utils:ver<0.0.28+>:auth<zef:lizmat>",
+        "META::verauthapi:ver<0.0.1+>:auth<zef:lizmat>",
+        "SBOM::Raku:ver<0.0.11+>:auth<zef:lizmat>"
+      ]
+    }
+  },
   "description": "Updating the Raku Ecosystem Archive",
   "license": "Artistic-2.0",
   "name": "Ecosystem::Archive::Update",
-  "perl": "6.d",
   "provides": {
     "Ecosystem::Archive::Update": "lib/Ecosystem/Archive/Update.rakumod"
   },
+  "raku": "6.d",
   "resources": [
   ],
   "source-url": "https://github.com/lizmat/Ecosystem-Archive-Update.git",
+  "support": {
+    "bugtracker": "https://github.com/lizmat/Ecosystem-Archive-Update/issues",
+    "source": "https://github.com/lizmat/Ecosystem-Archive-Update.git"
+  },
   "tags": [
     "REA",
-    "ECOSYSTEM"
+    "ECOSYSTEM",
+    "ARCHIVE",
+    "SBOM"
   ],
   "test-depends": [
   ],
-  "version": "0.0.27"
+  "version": "0.0.28"
 }

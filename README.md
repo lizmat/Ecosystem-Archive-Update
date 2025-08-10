@@ -12,8 +12,9 @@ SYNOPSIS
 use Ecosystem::Archive::Update;
 
 my $ea = Ecosystem::Archive::Update.new(
-  shelves     => 'archive',
-  jsons       => 'meta',
+  shelves => 'archive',
+  jsons   => 'meta',
+  sboms   => 'sbom',
 );
 
 say "Archive has $ea.meta.elems() identities:";
@@ -23,24 +24,28 @@ say "Archive has $ea.meta.elems() identities:";
 DESCRIPTION
 ===========
 
-Ecosystem::Archive::Update provides the basic logic to updating the Raku Ecosystem Archive, a place where (almost) every distribution ever available in the Raku Ecosystem, can be obtained even after it has been removed (specifically in the case of the old ecosystem master list and the distributions kept on CPAN).
+The `Ecosystem::Archive::Update` distribution provides the basic logic to updating the [Raku Ecosystem Archive](https://github.com/Raku/REA), a place where (almost) every distribution ever available in the Raku Ecosystem, can be obtained even after it has been removed (specifically in the case of the old ecosystem master list and the distributions kept on CPAN).
 
-ARGUMENTS
----------
+NAMED ARGUMENTS
+---------------
 
-  * shelves
+  * :shelves
 
-The name (or an `IO` object) of a directory in which to place distributions. This is usually a symlink to the "archive" directory of the actual [Raku Ecosystem Archive repository](https://github.com/lizmat/REA). The default is 'archive', aka the 'archive' subdirectory from the current directory.
+The name (or an `IO` object) of a directory in which to place distributions. This is usually a symlink to the "archive" directory of the actual [Raku Ecosystem Archive repository](https://github.com/Raku/REA). The default is 'archive', aka the 'archive' subdirectory from the current directory.
 
-  * jsons
+  * :jsons
 
-The name (or an `IO` object) of a directory in which to store `META6.json` files as downloaded. This is usually a symlink to the "meta" directory of the actual [Raku Ecosystem Archive repository](https://github.com/lizmat/REA). The default is 'meta', aka the 'meta' subdirectory from the current directory.
+The name (or an `IO` object) of a directory in which to store `META6.json` files as downloaded. This is usually a symlink to the "meta" directory of the actual [Raku Ecosystem Archive repository](https://github.com/Raku/REA). The default is 'meta', aka the 'meta' subdirectory from the current directory.
 
-  * degree
+  * :sboms
+
+The name (or an `IO` object) of a directory in which to store `CycloneDX SBOM` files as downloaded. This is usually a symlink to the "sbom" directory of the actual [Raku Ecosystem Archive repository](https://github.com/Raku/REA). The default is 'sbom', aka the 'sbom' subdirectory from the current directory.
+
+  * :degree
 
 The number of CPU cores that may be used for parallel processing. Defaults to the **half** number of `Kernel.cpu-cores`.
 
-  * batch
+  * :batch
 
 The number of objects to be processed in parallel per batch. Defaults to **64**.
 
@@ -156,6 +161,28 @@ say "Found $ea.notes.elems() notes:";
 
 Returns the `notes` of the object as a `List`.
 
+sboms
+-----
+
+```raku
+indir $ea.sboms, {
+    my $sboms = (shell 'ls */*', :out).out.lines.elems;
+    say "$sboms distributions with SBOMs";
+}
+```
+
+The `IO` object of the directory in which the CycloneDX SBOM filesi are being stored. For instance the `IRC::Client` distribution:
+
+    sbom
+      |- ...
+      |- I
+         |- ...
+         |- IRC::Client
+             |- IRC::Client:ver<4.0.13>:auth<zef:lizmat>.tar.gz.cdx.json
+             |- IRC::Client:ver<4.0.14>:auth<zef:lizmat>.tar.gz.cdx.json
+         |- ...
+      |- ...
+
 shelves
 -------
 
@@ -203,7 +230,7 @@ If you like this module, or what I’m doing more generally, committing to a [sm
 COPYRIGHT AND LICENSE
 =====================
 
-Copyright 2021, 2022, 2023, 2024 Elizabeth Mattijsen
+Copyright 2021, 2022, 2023, 2024, 2025 Elizabeth Mattijsen
 
 This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
 
