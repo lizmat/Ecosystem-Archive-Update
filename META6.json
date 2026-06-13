@@ -8,12 +8,12 @@
   "depends": {
     "runtime": {
       "requires": [
-        "JSON::Fast::Hyper:ver<0.0.10+>:auth<zef:lizmat>",
-        "paths:ver<10.1+>:auth<zef:lizmat>",
+        "JSON::Fast::Hyper:ver<0.0.11+>:auth<zef:lizmat>",
+        "paths:ver<10.2+>:auth<zef:lizmat>",
         "Rakudo::CORE::META:ver<0.0.12+>:auth<zef:lizmat>",
         "Identity::Utils:ver<0.0.28+>:auth<zef:lizmat>",
         "META::verauthapi:ver<0.0.1+>:auth<zef:lizmat>",
-        "SBOM::Raku:ver<0.0.11+>:auth<zef:lizmat>"
+        "SBOM::Raku:ver<0.0.13+>:auth<zef:lizmat>"
       ]
     }
   },
@@ -26,10 +26,11 @@
   "raku": "6.d",
   "resources": [
   ],
-  "source-url": "https://github.com/lizmat/Ecosystem-Archive-Update.git",
+  "source-url": "https://codeberg.org/lizmat/Ecosystem-Archive-Update.git",
   "support": {
-    "bugtracker": "https://github.com/lizmat/Ecosystem-Archive-Update/issues",
-    "source": "https://github.com/lizmat/Ecosystem-Archive-Update.git"
+    "bugtracker": "https://codeberg.org/lizmat/Ecosystem-Archive-Update/issues",
+    "email": "liz@raku.org",
+    "source": "https://codeberg.org/lizmat/Ecosystem-Archive-Update.git"
   },
   "tags": [
     "REA",
