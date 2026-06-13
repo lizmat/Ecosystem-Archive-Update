@@ -4,7 +4,7 @@
   "specVersion": "1.6",
   "version": 1,
   "metadata": {
-    "timestamp": "2025-08-10T09:44:51+00:00",
+    "timestamp": "2026-06-13T14:34:09+00:00",
     "lifecycles": [
       {
         "phase": "pre-build"
@@ -19,7 +19,7 @@
     "component": {
       "type": "library",
       "mime-type": "text/plain",
-      "bom-ref": "pkg:raku/zef:lizmat/Ecosystem::Archive::Update@0.0.28",
+      "bom-ref": "pkg:raku/zef:lizmat/Ecosystem::Archive::Update@0.0.29",
       "authors": [
         {
           "bom-ref": "ElizabethMattijsen",
@@ -29,7 +29,7 @@
       "publisher": "zef",
       "group": "zef:lizmat",
       "name": "Ecosystem::Archive::Update",
-      "version": "0.0.28",
+      "version": "0.0.29",
       "description": "Updating the Raku Ecosystem Archive",
       "scope": "required",
       "licenses": [
@@ -41,18 +41,18 @@
           }
         }
       ],
-      "purl": "pkg:raku/zef:lizmat/Ecosystem::Archive::Update@0.0.28",
+      "purl": "pkg:raku/zef:lizmat/Ecosystem::Archive::Update@0.0.29",
       "externalReferences": [
         {
-          "url": "https://github.com/lizmat/Ecosystem-Archive-Update",
+          "url": "https://codeberg.org/lizmat/Ecosystem-Archive-Update",
           "type": "distribution"
         },
         {
-          "url": "https://raku.land/zef:lizmat/Ecosystem::Archive::Update?v=0.0.28",
+          "url": "https://raku.land/zef:lizmat/Ecosystem::Archive::Update?v=0.0.29",
           "type": "documentation"
         },
         {
-          "url": "https://github.com/lizmat/Ecosystem-Archive-Update/issues",
+          "url": "https://codeberg.org/lizmat/Ecosystem-Archive-Update/issues",
           "type": "issue-tracker"
         },
         {
@@ -60,8 +60,8 @@
           "type": "license"
         },
         {
-          "url": "https://github.com/lizmat/Ecosystem-Archive-Update/archive/refs/tags/0.0.28.zip",
-          "type": "source-distribution"
+          "url": "mailto:liz@raku.org",
+          "type": "support"
         }
       ],
       "tags": [
@@ -85,7 +85,7 @@
         {
           "type": "library",
           "mime-type": "text/plain",
-          "bom-ref": "pkg:raku/zef:lizmat/SBOM::Raku@0.0.10",
+          "bom-ref": "pkg:raku/zef:lizmat/SBOM::Raku@0.0.13",
           "authors": [
             {
               "bom-ref": "ElizabethMattijsen",
@@ -95,7 +95,7 @@
           "publisher": "zef",
           "group": "zef:lizmat",
           "name": "SBOM::Raku",
-          "version": "0.0.10",
+          "version": "0.0.13",
           "description": "Raku specific SBOM functionality",
           "scope": "required",
           "licenses": [
@@ -107,14 +107,14 @@
               }
             }
           ],
-          "purl": "pkg:raku/zef:lizmat/SBOM::Raku@0.0.10",
+          "purl": "pkg:raku/zef:lizmat/SBOM::Raku@0.0.13",
           "externalReferences": [
             {
               "url": "https://github.com/lizmat/SBOM-Raku",
               "type": "distribution"
             },
             {
-              "url": "https://raku.land/zef:lizmat/SBOM::Raku?v=0.0.10",
+              "url": "https://raku.land/zef:lizmat/SBOM::Raku?v=0.0.13",
               "type": "documentation"
             },
             {
@@ -126,7 +126,7 @@
               "type": "license"
             },
             {
-              "url": "https://github.com/lizmat/SBOM-Raku/archive/refs/tags/0.0.10.zip",
+              "url": "https://github.com/lizmat/SBOM-Raku/archive/refs/tags/0.0.13.zip",
               "type": "source-distribution"
             },
             {
@@ -156,7 +156,7 @@
       "publisher": "Rakudo Core Developers",
       "group": "Rakudo Core Developers",
       "name": "Rakudo",
-      "version": "2025.06.1-13-g15a2a9b1f",
+      "version": "2026.05-104-ga07c0735f",
       "description": "The Rakudo™ Compiler implementing the Raku® Programming Language",
       "scope": "required",
       "licenses": [
@@ -168,7 +168,7 @@
           }
         }
       ],
-      "copyright": "© 2006 - 2025 Yet Another Society",
+      "copyright": "© 2006 - 2026 Yet Another Society",
       "externalReferences": [
         {
           "url": "https://github.com/rakudo/rakudo",
@@ -179,7 +179,7 @@
           "type": "issue-tracker"
         },
         {
-          "url": "https://github.com/rakudo/rakudo/archive/15a2a9b1f.zip",
+          "url": "https://github.com/rakudo/rakudo/archive/a07c0735f.zip",
           "type": "source-distribution"
         },
         {
@@ -200,7 +200,7 @@
       "publisher": "The MoarVM Team",
       "group": "The MoarVM Team",
       "name": "Moar",
-      "version": "2025.06-5-gb1c74b8d8",
+      "version": "2026.05.1-11-gc68094f8b",
       "description": "Short for \"Metamodel On A Runtime\", MoarVM is a modern virtual machine built for the Rakudo compiler and the NQP Compiler Toolchain.",
       "scope": "required",
       "licenses": [
@@ -212,7 +212,7 @@
           }
         }
       ],
-      "copyright": "© 2012 - 2025 Jonathan Worthington",
+      "copyright": "© 2012 - 2026 Jonathan Worthington",
       "externalReferences": [
         {
           "url": "https://github.com/MoarVM/MoarVM",
@@ -227,9 +227,64 @@
           "type": "chat"
         },
         {
-          "url": "https://github.com/MoarVM/MoarVM.git/archive/refs/tags/b1c74b8d8.zip",
+          "url": "https://github.com/MoarVM/MoarVM.git/archive/refs/tags/c68094f8b.zip",
           "type": "source-distribution"
         }
+      ]
+    },
+    {
+      "type": "library",
+      "mime-type": "text/plain",
+      "bom-ref": "pkg:raku/MIME::Base64",
+      "authors": [
+        {
+          "bom-ref": "AdrianWhite",
+          "name": "Adrian White"
+        }
+      ],
+      "publisher": "zef",
+      "group": "zef:raku-community-modules",
+      "name": "MIME::Base64",
+      "version": "1.2.5",
+      "description": "Encoding and decoding Base64 ASCII strings",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "Artistic-2.0",
+            "acknowledgement": "declared",
+            "url": "https://spdx.org/licenses/Artistic-2.0.json"
+          }
+        }
+      ],
+      "purl": "pkg:raku/zef:raku-community-modules/MIME::Base64@1.2.5",
+      "externalReferences": [
+        {
+          "url": "git://github.com/raku-community-modules/MIME-Base64",
+          "type": "distribution"
+        },
+        {
+          "url": "https://raku.land/zef:raku-community-modules/MIME::Base64?v=1.2.5",
+          "type": "documentation"
+        },
+        {
+          "url": "https://github.com/raku-community-modules/MIME-Base64/issues",
+          "type": "issue-tracker"
+        },
+        {
+          "url": "https://spdx.org/licenses/Artistic-2.0.json",
+          "type": "license"
+        },
+        {
+          "url": "mailto:community@raku.org",
+          "type": "support"
+        }
+      ],
+      "tags": [
+        "MIME",
+        "BASE64",
+        "ENCODING",
+        "DECODING"
       ]
     },
     {
@@ -293,112 +348,6 @@
     {
       "type": "library",
       "mime-type": "text/plain",
-      "bom-ref": "pkg:raku/cpan:TIMOTIMO/JSON::Fast?vers=vers:raku/%3E=0.19",
-      "authors": [
-        {
-          "bom-ref": "TimoPaulssen",
-          "name": "Timo Paulssen"
-        },
-        {
-          "bom-ref": "TonyODell",
-          "name": "Tony O'Dell"
-        },
-        {
-          "bom-ref": "WenzelPPPeppmeyer",
-          "name": "Wenzel P. P. Peppmeyer"
-        },
-        {
-          "bom-ref": "ElizabethMattijsen",
-          "name": "Elizabeth Mattijsen"
-        }
-      ],
-      "publisher": "cpan",
-      "group": "cpan:TIMOTIMO",
-      "name": "JSON::Fast",
-      "version": "0.19",
-      "description": "A naive, fast json parser and serializer; drop-in replacement for JSON::Tiny",
-      "scope": "required",
-      "licenses": [
-        {
-          "license": {
-            "id": "Artistic-2.0",
-            "acknowledgement": "declared",
-            "url": "https://spdx.org/licenses/Artistic-2.0.json"
-          }
-        }
-      ],
-      "purl": "pkg:raku/cpan:TIMOTIMO/JSON::Fast@0.19",
-      "externalReferences": [
-        {
-          "url": "git://github.com/timo/json_fast",
-          "type": "distribution"
-        },
-        {
-          "url": "https://raku.land/cpan:TIMOTIMO/JSON::Fast?v=0.19",
-          "type": "documentation"
-        },
-        {
-          "url": "https://spdx.org/licenses/Artistic-2.0.json",
-          "type": "license"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "mime-type": "text/plain",
-      "bom-ref": "pkg:raku/cpan:TIMOTIMO/JSON::Fast@0.19",
-      "authors": [
-        {
-          "bom-ref": "TimoPaulssen",
-          "name": "Timo Paulssen"
-        },
-        {
-          "bom-ref": "TonyODell",
-          "name": "Tony O'Dell"
-        },
-        {
-          "bom-ref": "WenzelPPPeppmeyer",
-          "name": "Wenzel P. P. Peppmeyer"
-        },
-        {
-          "bom-ref": "ElizabethMattijsen",
-          "name": "Elizabeth Mattijsen"
-        }
-      ],
-      "publisher": "cpan",
-      "group": "cpan:TIMOTIMO",
-      "name": "JSON::Fast",
-      "version": "0.19",
-      "description": "A naive, fast json parser and serializer; drop-in replacement for JSON::Tiny",
-      "scope": "required",
-      "licenses": [
-        {
-          "license": {
-            "id": "Artistic-2.0",
-            "acknowledgement": "declared",
-            "url": "https://spdx.org/licenses/Artistic-2.0.json"
-          }
-        }
-      ],
-      "purl": "pkg:raku/cpan:TIMOTIMO/JSON::Fast@0.19",
-      "externalReferences": [
-        {
-          "url": "git://github.com/timo/json_fast",
-          "type": "distribution"
-        },
-        {
-          "url": "https://raku.land/cpan:TIMOTIMO/JSON::Fast?v=0.19",
-          "type": "documentation"
-        },
-        {
-          "url": "https://spdx.org/licenses/Artistic-2.0.json",
-          "type": "license"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "mime-type": "text/plain",
       "bom-ref": "pkg:raku/zef:demayl/Email::Valid?vers=vers:raku/%3E=1.0.7",
       "authors": [
         {
@@ -450,18 +399,18 @@
     {
       "type": "library",
       "mime-type": "text/plain",
-      "bom-ref": "pkg:raku/zef:lizmat/Identity::Utils?vers=vers:raku/%3E=0.0.25",
+      "bom-ref": "pkg:raku/zef:leont/YAMLish?vers=vers:raku/%3E=0.1.2",
       "authors": [
         {
-          "bom-ref": "ElizabethMattijsen",
-          "name": "Elizabeth Mattijsen"
+          "bom-ref": "LeonTimmermans",
+          "name": "Leon Timmermans"
         }
       ],
       "publisher": "zef",
-      "group": "zef:lizmat",
-      "name": "Identity::Utils",
-      "version": "0.0.28",
-      "description": "Provide utility functions related to distribution identities",
+      "group": "zef:leont",
+      "name": "YAMLish",
+      "version": "0.1.2",
+      "description": "a YAML parser/emitter written in pure raku",
       "scope": "required",
       "licenses": [
         {
@@ -472,38 +421,26 @@
           }
         }
       ],
-      "purl": "pkg:raku/zef:lizmat/Identity::Utils@0.0.28",
+      "purl": "pkg:raku/zef:leont/YAMLish@0.1.2",
       "externalReferences": [
         {
-          "url": "https://github.com/lizmat/Identity-Utils",
+          "url": "git://github.com/leont/yamlish",
           "type": "distribution"
         },
         {
-          "url": "https://raku.land/zef:lizmat/Identity::Utils?v=0.0.28",
+          "url": "https://raku.land/zef:leont/YAMLish?v=0.1.2",
           "type": "documentation"
-        },
-        {
-          "url": "https://github.com/lizmat/Identity-Utils/issues",
-          "type": "issue-tracker"
         },
         {
           "url": "https://spdx.org/licenses/Artistic-2.0.json",
           "type": "license"
-        },
-        {
-          "url": "https://github.com/lizmat/Identity-Utils/archive/refs/tags/0.0.28.zip",
-          "type": "source-distribution"
-        },
-        {
-          "url": "mailto:liz@raku.rocks",
-          "type": "support"
         }
       ],
       "tags": [
-        "DISTRIBUTION",
-        "META",
-        "IDENTITY",
-        "ECOSYSTEM"
+        "YAML",
+        "format",
+        "parser",
+        "serialization"
       ]
     },
     {
@@ -568,7 +505,7 @@
     {
       "type": "library",
       "mime-type": "text/plain",
-      "bom-ref": "pkg:raku/zef:lizmat/JSON::Fast::Hyper?vers=vers:raku/%3E=0.0.10",
+      "bom-ref": "pkg:raku/zef:lizmat/JSON::Fast::Hyper?vers=vers:raku/%3E=0.0.11",
       "authors": [
         {
           "bom-ref": "ElizabethMattijsen",
@@ -578,7 +515,7 @@
       "publisher": "zef",
       "group": "zef:lizmat",
       "name": "JSON::Fast::Hyper",
-      "version": "0.0.10",
+      "version": "0.0.11",
       "description": "Read/Write hyperable JSON",
       "scope": "required",
       "licenses": [
@@ -590,14 +527,14 @@
           }
         }
       ],
-      "purl": "pkg:raku/zef:lizmat/JSON::Fast::Hyper@0.0.10",
+      "purl": "pkg:raku/zef:lizmat/JSON::Fast::Hyper@0.0.11",
       "externalReferences": [
         {
           "url": "https://github.com/lizmat/JSON-Fast-Hyper",
           "type": "distribution"
         },
         {
-          "url": "https://raku.land/zef:lizmat/JSON::Fast::Hyper?v=0.0.10",
+          "url": "https://raku.land/zef:lizmat/JSON::Fast::Hyper?v=0.0.11",
           "type": "documentation"
         },
         {
@@ -609,8 +546,12 @@
           "type": "license"
         },
         {
-          "url": "https://github.com/lizmat/JSON-Fast-Hyper/archive/refs/tags/0.0.10.zip",
+          "url": "https://github.com/lizmat/JSON-Fast-Hyper/archive/refs/tags/0.0.11.zip",
           "type": "source-distribution"
+        },
+        {
+          "url": "mailto:liz@raku.rocks",
+          "type": "support"
         }
       ],
       "tags": [
@@ -674,7 +615,7 @@
     {
       "type": "library",
       "mime-type": "text/plain",
-      "bom-ref": "pkg:raku/zef:lizmat/PURL?vers=vers:raku/%3E=0.0.14",
+      "bom-ref": "pkg:raku/zef:lizmat/PURL?vers=vers:raku/%3E=0.0.15",
       "authors": [
         {
           "bom-ref": "ElizabethMattijsen",
@@ -684,7 +625,7 @@
       "publisher": "zef",
       "group": "zef:lizmat",
       "name": "PURL",
-      "version": "0.0.14",
+      "version": "0.0.15",
       "description": "Package URL specification v1.0.X",
       "scope": "required",
       "licenses": [
@@ -696,14 +637,14 @@
           }
         }
       ],
-      "purl": "pkg:raku/zef:lizmat/PURL@0.0.14",
+      "purl": "pkg:raku/zef:lizmat/PURL@0.0.15",
       "externalReferences": [
         {
           "url": "https://github.com/lizmat/PURL",
           "type": "distribution"
         },
         {
-          "url": "https://raku.land/zef:lizmat/PURL?v=0.0.14",
+          "url": "https://raku.land/zef:lizmat/PURL?v=0.0.15",
           "type": "documentation"
         },
         {
@@ -715,7 +656,7 @@
           "type": "license"
         },
         {
-          "url": "https://github.com/lizmat/PURL/archive/refs/tags/0.0.14.zip",
+          "url": "https://github.com/lizmat/PURL/archive/refs/tags/0.0.15.zip",
           "type": "source-distribution"
         },
         {
@@ -788,7 +729,7 @@
     {
       "type": "library",
       "mime-type": "text/plain",
-      "bom-ref": "pkg:raku/zef:lizmat/SBOM::CycloneDX?vers=vers:raku/%3E=0.0.13",
+      "bom-ref": "pkg:raku/zef:lizmat/SBOM::CycloneDX?vers=vers:raku/%3E=0.0.16",
       "authors": [
         {
           "bom-ref": "ElizabethMattijsen",
@@ -798,7 +739,7 @@
       "publisher": "zef",
       "group": "zef:lizmat",
       "name": "SBOM::CycloneDX",
-      "version": "0.0.13",
+      "version": "0.0.16",
       "description": "Software Bill Of Materials, CycloneDX style",
       "scope": "required",
       "licenses": [
@@ -810,14 +751,14 @@
           }
         }
       ],
-      "purl": "pkg:raku/zef:lizmat/SBOM::CycloneDX@0.0.13",
+      "purl": "pkg:raku/zef:lizmat/SBOM::CycloneDX@0.0.16",
       "externalReferences": [
         {
           "url": "https://github.com/lizmat/SBOM-CycloneDX",
           "type": "distribution"
         },
         {
-          "url": "https://raku.land/zef:lizmat/SBOM::CycloneDX?v=0.0.13",
+          "url": "https://raku.land/zef:lizmat/SBOM::CycloneDX?v=0.0.16",
           "type": "documentation"
         },
         {
@@ -829,7 +770,7 @@
           "type": "license"
         },
         {
-          "url": "https://github.com/lizmat/SBOM-CycloneDX/archive/refs/tags/0.0.13.zip",
+          "url": "https://github.com/lizmat/SBOM-CycloneDX/archive/refs/tags/0.0.16.zip",
           "type": "source-distribution"
         },
         {
@@ -847,7 +788,7 @@
     {
       "type": "library",
       "mime-type": "text/plain",
-      "bom-ref": "pkg:raku/zef:lizmat/SBOM::Raku?vers=vers:raku/%3E=0.0.11",
+      "bom-ref": "pkg:raku/zef:lizmat/SBOM::Raku?vers=vers:raku/%3E=0.0.13",
       "authors": [
         {
           "bom-ref": "ElizabethMattijsen",
@@ -857,7 +798,7 @@
       "publisher": "zef",
       "group": "zef:lizmat",
       "name": "SBOM::Raku",
-      "version": "0.0.11",
+      "version": "0.0.13",
       "description": "Raku specific SBOM functionality",
       "scope": "required",
       "licenses": [
@@ -869,14 +810,14 @@
           }
         }
       ],
-      "purl": "pkg:raku/zef:lizmat/SBOM::Raku@0.0.11",
+      "purl": "pkg:raku/zef:lizmat/SBOM::Raku@0.0.13",
       "externalReferences": [
         {
           "url": "https://github.com/lizmat/SBOM-Raku",
           "type": "distribution"
         },
         {
-          "url": "https://raku.land/zef:lizmat/SBOM::Raku?v=0.0.11",
+          "url": "https://raku.land/zef:lizmat/SBOM::Raku?v=0.0.13",
           "type": "documentation"
         },
         {
@@ -888,7 +829,7 @@
           "type": "license"
         },
         {
-          "url": "https://github.com/lizmat/SBOM-Raku/archive/refs/tags/0.0.11.zip",
+          "url": "https://github.com/lizmat/SBOM-Raku/archive/refs/tags/0.0.13.zip",
           "type": "source-distribution"
         },
         {
@@ -915,7 +856,7 @@
       "publisher": "zef",
       "group": "zef:lizmat",
       "name": "String::Utils",
-      "version": "0.0.36",
+      "version": "0.0.40",
       "description": "Provide some optimized string functions",
       "scope": "required",
       "licenses": [
@@ -927,14 +868,14 @@
           }
         }
       ],
-      "purl": "pkg:raku/zef:lizmat/String::Utils@0.0.36",
+      "purl": "pkg:raku/zef:lizmat/String::Utils@0.0.40",
       "externalReferences": [
         {
           "url": "https://github.com/lizmat/String-Utils",
           "type": "distribution"
         },
         {
-          "url": "https://raku.land/zef:lizmat/String::Utils?v=0.0.36",
+          "url": "https://raku.land/zef:lizmat/String::Utils?v=0.0.40",
           "type": "documentation"
         },
         {
@@ -946,8 +887,12 @@
           "type": "license"
         },
         {
-          "url": "https://github.com/lizmat/String-Utils/archive/refs/tags/0.0.36.zip",
+          "url": "https://github.com/lizmat/String-Utils/archive/refs/tags/0.0.40.zip",
           "type": "source-distribution"
+        },
+        {
+          "url": "mailto:liz@raku.rocks",
+          "type": "support"
         }
       ],
       "tags": [
@@ -959,13 +904,14 @@
         "NGRAM",
         "NAUGHTY",
         "WORD",
-        "MARKS"
+        "MARKS",
+        "ANAGRAM"
       ]
     },
     {
       "type": "library",
       "mime-type": "text/plain",
-      "bom-ref": "pkg:raku/zef:lizmat/String::Utils?vers=vers:raku/%3E=0.0.36",
+      "bom-ref": "pkg:raku/zef:lizmat/String::Utils?vers=vers:raku/%3E=0.0.40",
       "authors": [
         {
           "bom-ref": "ElizabethMattijsen",
@@ -975,7 +921,7 @@
       "publisher": "zef",
       "group": "zef:lizmat",
       "name": "String::Utils",
-      "version": "0.0.36",
+      "version": "0.0.40",
       "description": "Provide some optimized string functions",
       "scope": "required",
       "licenses": [
@@ -987,14 +933,14 @@
           }
         }
       ],
-      "purl": "pkg:raku/zef:lizmat/String::Utils@0.0.36",
+      "purl": "pkg:raku/zef:lizmat/String::Utils@0.0.40",
       "externalReferences": [
         {
           "url": "https://github.com/lizmat/String-Utils",
           "type": "distribution"
         },
         {
-          "url": "https://raku.land/zef:lizmat/String::Utils?v=0.0.36",
+          "url": "https://raku.land/zef:lizmat/String::Utils?v=0.0.40",
           "type": "documentation"
         },
         {
@@ -1006,8 +952,12 @@
           "type": "license"
         },
         {
-          "url": "https://github.com/lizmat/String-Utils/archive/refs/tags/0.0.36.zip",
+          "url": "https://github.com/lizmat/String-Utils/archive/refs/tags/0.0.40.zip",
           "type": "source-distribution"
+        },
+        {
+          "url": "mailto:liz@raku.rocks",
+          "type": "support"
         }
       ],
       "tags": [
@@ -1019,13 +969,14 @@
         "NGRAM",
         "NAUGHTY",
         "WORD",
-        "MARKS"
+        "MARKS",
+        "ANAGRAM"
       ]
     },
     {
       "type": "library",
       "mime-type": "text/plain",
-      "bom-ref": "pkg:raku/zef:lizmat/VERS?vers=vers:raku/%3E=0.0.2",
+      "bom-ref": "pkg:raku/zef:lizmat/VERS?vers=vers:raku/%3E=0.0.3",
       "authors": [
         {
           "bom-ref": "ElizabethMattijsenlizrakurocks",
@@ -1036,7 +987,7 @@
       "publisher": "zef",
       "group": "zef:lizmat",
       "name": "VERS",
-      "version": "0.0.2",
+      "version": "0.0.3",
       "description": "Support for the VErsion Range Specifier URI scheme",
       "scope": "required",
       "licenses": [
@@ -1048,14 +999,14 @@
           }
         }
       ],
-      "purl": "pkg:raku/zef:lizmat/VERS@0.0.2",
+      "purl": "pkg:raku/zef:lizmat/VERS@0.0.3",
       "externalReferences": [
         {
           "url": "https://github.com/lizmat/VERS",
           "type": "distribution"
         },
         {
-          "url": "https://raku.land/zef:lizmat/VERS?v=0.0.2",
+          "url": "https://raku.land/zef:lizmat/VERS?v=0.0.3",
           "type": "documentation"
         },
         {
@@ -1067,7 +1018,7 @@
           "type": "license"
         },
         {
-          "url": "https://github.com/lizmat/VERS/archive/refs/tags/0.0.2.zip",
+          "url": "https://github.com/lizmat/VERS/archive/refs/tags/0.0.3.zip",
           "type": "source-distribution"
         }
       ],
@@ -1076,6 +1027,120 @@
         "PURL",
         "SBOM",
         "SW_VERS"
+      ]
+    },
+    {
+      "type": "library",
+      "mime-type": "text/plain",
+      "bom-ref": "pkg:raku/zef:lizmat/Version::Raku?vers=vers:raku/%3E=0.0.1",
+      "authors": [
+        {
+          "bom-ref": "ElizabethMattijsen",
+          "name": "Elizabeth Mattijsen"
+        }
+      ],
+      "publisher": "zef",
+      "group": "zef:lizmat",
+      "name": "Version::Raku",
+      "version": "0.0.2",
+      "description": "Version with comparator methods",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "Artistic-2.0",
+            "acknowledgement": "declared",
+            "url": "https://spdx.org/licenses/Artistic-2.0.json"
+          }
+        }
+      ],
+      "purl": "pkg:raku/zef:lizmat/Version::Raku@0.0.2",
+      "externalReferences": [
+        {
+          "url": "https://github.com/lizmat/Version-Raku",
+          "type": "distribution"
+        },
+        {
+          "url": "https://raku.land/zef:lizmat/Version::Raku?v=0.0.2",
+          "type": "documentation"
+        },
+        {
+          "url": "https://github.com/lizmat/Version-Raku/issues",
+          "type": "issue-tracker"
+        },
+        {
+          "url": "https://spdx.org/licenses/Artistic-2.0.json",
+          "type": "license"
+        },
+        {
+          "url": "https://github.com/lizmat/Version-Raku/archive/refs/tags/0.0.2.zip",
+          "type": "source-distribution"
+        },
+        {
+          "url": "mailto:liz@raku.rocks",
+          "type": "support"
+        }
+      ],
+      "tags": [
+        "VERSION",
+        "REPOLOGY"
+      ]
+    },
+    {
+      "type": "library",
+      "mime-type": "text/plain",
+      "bom-ref": "pkg:raku/zef:lizmat/Version::Repology?vers=vers:raku/%3E=0.0.3",
+      "authors": [
+        {
+          "bom-ref": "ElizabethMattijsen",
+          "name": "Elizabeth Mattijsen"
+        }
+      ],
+      "publisher": "zef",
+      "group": "zef:lizmat",
+      "name": "Version::Repology",
+      "version": "0.0.5",
+      "description": "Implement Repology Version logic",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "Artistic-2.0",
+            "acknowledgement": "declared",
+            "url": "https://spdx.org/licenses/Artistic-2.0.json"
+          }
+        }
+      ],
+      "purl": "pkg:raku/zef:lizmat/Version::Repology@0.0.5",
+      "externalReferences": [
+        {
+          "url": "https://github.com/lizmat/Version-Repology",
+          "type": "distribution"
+        },
+        {
+          "url": "https://raku.land/zef:lizmat/Version::Repology?v=0.0.5",
+          "type": "documentation"
+        },
+        {
+          "url": "https://github.com/lizmat/Version-Repology/issues",
+          "type": "issue-tracker"
+        },
+        {
+          "url": "https://spdx.org/licenses/Artistic-2.0.json",
+          "type": "license"
+        },
+        {
+          "url": "https://github.com/lizmat/Version-Repology/archive/refs/tags/0.0.5.zip",
+          "type": "source-distribution"
+        },
+        {
+          "url": "mailto:liz@raku.rocks",
+          "type": "support"
+        }
+      ],
+      "tags": [
+        "VERSION",
+        "REPOLOGY"
       ]
     },
     {
@@ -1136,7 +1201,7 @@
     {
       "type": "library",
       "mime-type": "text/plain",
-      "bom-ref": "pkg:raku/zef:lizmat/paths?vers=vers:raku/%3E=10.1",
+      "bom-ref": "pkg:raku/zef:lizmat/paths?vers=vers:raku/%3E=10.2",
       "authors": [
         {
           "bom-ref": "ElizabethMattijsen",
@@ -1146,7 +1211,7 @@
       "publisher": "zef",
       "group": "zef:lizmat",
       "name": "paths",
-      "version": "10.1",
+      "version": "10.2",
       "description": "A fast recursive file / directory finder",
       "scope": "required",
       "licenses": [
@@ -1158,14 +1223,14 @@
           }
         }
       ],
-      "purl": "pkg:raku/zef:lizmat/paths@10.1",
+      "purl": "pkg:raku/zef:lizmat/paths@10.2",
       "externalReferences": [
         {
           "url": "https://github.com/lizmat/paths",
           "type": "distribution"
         },
         {
-          "url": "https://raku.land/zef:lizmat/paths?v=10.1",
+          "url": "https://raku.land/zef:lizmat/paths?v=10.2",
           "type": "documentation"
         },
         {
@@ -1177,8 +1242,12 @@
           "type": "license"
         },
         {
-          "url": "https://github.com/lizmat/paths/archive/refs/tags/10.1.zip",
+          "url": "https://github.com/lizmat/paths/archive/refs/tags/10.2.zip",
           "type": "source-distribution"
+        },
+        {
+          "url": "mailto:liz@raku.rocks",
+          "type": "support"
         }
       ],
       "tags": [
@@ -1190,22 +1259,21 @@
     {
       "type": "library",
       "mime-type": "text/plain",
-      "bom-ref": "pkg:raku/zef:raku-community-modules/OpenSSL?vers=vers:raku/%3E=0.2.5",
+      "bom-ref": "pkg:raku/zef:raku-community-modules/OpenSSL?vers=vers:raku/%3E=0.2.7",
       "authors": [
         {
           "bom-ref": "FilipSergot",
           "name": "Filip Sergot"
         },
         {
-          "bom-ref": "ElizabethMattijsenlizrakurocks",
-          "name": "Elizabeth Mattijsen",
-          "email": "liz@raku.rocks"
+          "bom-ref": "ElizabethMattijsen",
+          "name": "Elizabeth Mattijsen"
         }
       ],
       "publisher": "zef",
       "group": "zef:raku-community-modules",
       "name": "OpenSSL",
-      "version": "0.2.5",
+      "version": "0.2.7",
       "description": "OpenSSL bindings",
       "scope": "required",
       "licenses": [
@@ -1217,14 +1285,14 @@
           }
         }
       ],
-      "purl": "pkg:raku/zef:raku-community-modules/OpenSSL@0.2.5",
+      "purl": "pkg:raku/zef:raku-community-modules/OpenSSL@0.2.7",
       "externalReferences": [
         {
           "url": "https://github.com/raku-community-modules/OpenSSL",
           "type": "distribution"
         },
         {
-          "url": "https://raku.land/zef:raku-community-modules/OpenSSL?v=0.2.5",
+          "url": "https://raku.land/zef:raku-community-modules/OpenSSL?v=0.2.7",
           "type": "documentation"
         },
         {
@@ -1236,8 +1304,12 @@
           "type": "license"
         },
         {
-          "url": "https://github.com/raku-community-modules/OpenSSL/archive/refs/tags/0.2.5.zip",
+          "url": "https://github.com/raku-community-modules/OpenSSL/archive/refs/tags/0.2.7.zip",
           "type": "source-distribution"
+        },
+        {
+          "url": "mailto:community@raku.org",
+          "type": "support"
         }
       ],
       "tags": [
@@ -1302,19 +1374,72 @@
           "type": "source-distribution"
         }
       ]
+    },
+    {
+      "type": "library",
+      "mime-type": "text/plain",
+      "bom-ref": "pkg:raku/zef:timo/JSON::Fast?vers=vers:raku/%3E=0.20",
+      "authors": [
+        {
+          "bom-ref": "TimoPaulssen",
+          "name": "Timo Paulssen"
+        },
+        {
+          "bom-ref": "TonyODell",
+          "name": "Tony O'Dell"
+        },
+        {
+          "bom-ref": "WenzelPPPeppmeyer",
+          "name": "Wenzel P. P. Peppmeyer"
+        },
+        {
+          "bom-ref": "ElizabethMattijsen",
+          "name": "Elizabeth Mattijsen"
+        }
+      ],
+      "publisher": "zef",
+      "group": "zef:timo",
+      "name": "JSON::Fast",
+      "version": "0.20.1",
+      "description": "A naive, fast json parser and serializer; drop-in replacement for JSON::Tiny",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "Artistic-2.0",
+            "acknowledgement": "declared",
+            "url": "https://spdx.org/licenses/Artistic-2.0.json"
+          }
+        }
+      ],
+      "purl": "pkg:raku/zef:timo/JSON::Fast@0.20.1",
+      "externalReferences": [
+        {
+          "url": "git://github.com/timo/json_fast",
+          "type": "distribution"
+        },
+        {
+          "url": "https://raku.land/zef:timo/JSON::Fast?v=0.20.1",
+          "type": "documentation"
+        },
+        {
+          "url": "https://spdx.org/licenses/Artistic-2.0.json",
+          "type": "license"
+        }
+      ]
     }
   ],
   "externalReferences": [
     {
-      "url": "https://github.com/lizmat/Ecosystem-Archive-Update",
+      "url": "https://codeberg.org/lizmat/Ecosystem-Archive-Update",
       "type": "distribution"
     },
     {
-      "url": "https://raku.land/zef:lizmat/Ecosystem::Archive::Update?v=0.0.28",
+      "url": "https://raku.land/zef:lizmat/Ecosystem::Archive::Update?v=0.0.29",
       "type": "documentation"
     },
     {
-      "url": "https://github.com/lizmat/Ecosystem-Archive-Update/issues",
+      "url": "https://codeberg.org/lizmat/Ecosystem-Archive-Update/issues",
       "type": "issue-tracker"
     },
     {
@@ -1322,8 +1447,8 @@
       "type": "license"
     },
     {
-      "url": "https://github.com/lizmat/Ecosystem-Archive-Update/archive/refs/tags/0.0.28.zip",
-      "type": "source-distribution"
+      "url": "mailto:liz@raku.org",
+      "type": "support"
     }
   ],
   "dependencies": [
@@ -1340,10 +1465,10 @@
       ]
     },
     {
-      "ref": "pkg:raku/zef:lizmat/JSON::Fast::Hyper?vers=vers:raku/%3E=0.0.10",
+      "ref": "pkg:raku/zef:lizmat/JSON::Fast::Hyper?vers=vers:raku/%3E=0.0.11",
       "dependsOn": [
-        "pkg:raku/cpan:TIMOTIMO/JSON::Fast@0.19",
-        "pkg:raku/zef:lizmat/hyperize?vers=vers:raku/%3E=0.0.4"
+        "pkg:raku/zef:lizmat/hyperize?vers=vers:raku/%3E=0.0.4",
+        "pkg:raku/zef:timo/JSON::Fast?vers=vers:raku/%3E=0.20"
       ]
     },
     {
@@ -1353,31 +1478,33 @@
       "ref": "pkg:raku/zef:lizmat/Rakudo::CORE::META?vers=vers:raku/%3E=0.0.12"
     },
     {
-      "ref": "pkg:raku/zef:lizmat/SBOM::Raku?vers=vers:raku/%3E=0.0.11",
+      "ref": "pkg:raku/zef:lizmat/SBOM::Raku?vers=vers:raku/%3E=0.0.13",
       "dependsOn": [
+        "pkg:raku/MIME::Base64",
         "pkg:raku/Net::DNS",
-        "pkg:raku/cpan:TIMOTIMO/JSON::Fast?vers=vers:raku/%3E=0.19",
         "pkg:raku/zef:demayl/Email::Valid?vers=vers:raku/%3E=1.0.7",
-        "pkg:raku/zef:lizmat/Identity::Utils?vers=vers:raku/%3E=0.0.25",
+        "pkg:raku/zef:leont/YAMLish?vers=vers:raku/%3E=0.1.2",
         "pkg:raku/zef:lizmat/Identity::Utils?vers=vers:raku/%3E=0.0.28",
-        "pkg:raku/zef:lizmat/PURL?vers=vers:raku/%3E=0.0.14",
+        "pkg:raku/zef:lizmat/PURL?vers=vers:raku/%3E=0.0.15",
         "pkg:raku/zef:lizmat/Rakudo::CORE::META?vers=vers:raku/%3E=0.0.12",
-        "pkg:raku/zef:lizmat/SBOM::CycloneDX?vers=vers:raku/%3E=0.0.13",
-        "pkg:raku/zef:lizmat/String::Utils?vers=vers:raku/%3E=0.0.35",
-        "pkg:raku/zef:lizmat/String::Utils?vers=vers:raku/%3E=0.0.36",
-        "pkg:raku/zef:lizmat/VERS?vers=vers:raku/%3E=0.0.2",
-        "pkg:raku/zef:raku-community-modules/OpenSSL?vers=vers:raku/%3E=0.2.5",
-        "pkg:raku/zef:raku-community-modules/URI::Encode?vers=vers:raku/%3E=1.0"
+        "pkg:raku/zef:lizmat/SBOM::CycloneDX?vers=vers:raku/%3E=0.0.16",
+        "pkg:raku/zef:lizmat/String::Utils?vers=vers:raku/%3E=0.0.40",
+        "pkg:raku/zef:lizmat/VERS?vers=vers:raku/%3E=0.0.3",
+        "pkg:raku/zef:lizmat/Version::Raku?vers=vers:raku/%3E=0.0.1",
+        "pkg:raku/zef:lizmat/Version::Repology?vers=vers:raku/%3E=0.0.3",
+        "pkg:raku/zef:raku-community-modules/OpenSSL?vers=vers:raku/%3E=0.2.7",
+        "pkg:raku/zef:raku-community-modules/URI::Encode?vers=vers:raku/%3E=1.0",
+        "pkg:raku/zef:timo/JSON::Fast?vers=vers:raku/%3E=0.20"
       ]
     },
     {
-      "ref": "pkg:raku/zef:lizmat/SBOM::Raku@0.0.10",
+      "ref": "pkg:raku/zef:lizmat/SBOM::Raku@0.0.13",
       "dependsOn": [
         "Rakudo"
       ]
     },
     {
-      "ref": "pkg:raku/zef:lizmat/paths?vers=vers:raku/%3E=10.1"
+      "ref": "pkg:raku/zef:lizmat/paths?vers=vers:raku/%3E=10.2"
     }
   ]
 }
