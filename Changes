@@ -2,6 +2,9 @@ Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
 
+0.0.30  2026-09-17T19:16:36+02:00
+    - Up dependencies to make RakuAST ready
+
 0.0.29  2026-06-13T16:33:34+02:00
     - Migrate repo to Codeberg
     - Up dependencies

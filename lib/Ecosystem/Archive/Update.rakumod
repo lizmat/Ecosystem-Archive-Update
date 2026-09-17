@@ -1,12 +1,12 @@
-use JSON::Fast::Hyper:ver<0.0.11+>:auth<zef:lizmat>;
-use paths:ver<10.2+>:auth<zef:lizmat>;
+use JSON::Fast::Hyper:ver<0.0.12+>:auth<zef:lizmat>;
+use paths:ver<10.3+>:auth<zef:lizmat>;
 use Rakudo::CORE::META:ver<0.0.12+>:auth<zef:lizmat>;
 
-use Identity::Utils:ver<0.0.28+>:auth<zef:lizmat> <
+use Identity::Utils:ver<0.0.29+>:auth<zef:lizmat> <
   api auth build short-name ver version zef-index-url
 >;
 
-use SBOM::Raku:ver<0.0.13+>:auth<zef:lizmat> <
+use SBOM::Raku:ver<0.0.14+>:auth<zef:lizmat> <
   tar-sbom
 >;
 
@@ -232,7 +232,7 @@ class Ecosystem::Archive::Update {
     }
 
     method !update-cpan($force-json --> Nil) {
-        my @includes = BEGIN @extensions.map: {  # my constant @ dies
+        my @includes = BEGIN eager @extensions.map: {  # my constant @ dies
             '--include="/id/*/*/*/Perl6/*' ~ $_ ~ '"'
         }
 
