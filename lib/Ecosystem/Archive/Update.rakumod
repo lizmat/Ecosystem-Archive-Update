@@ -20,8 +20,20 @@ my sub meta-to-io(%distribution, IO::Path:D $io) {
 
 # very basic URL fetcher
 my sub GET(Str:D $url) {
-    (run 'curl', '-L', '-k', '-s', '-f', $url, :out).out.slurp || Nil
+    my sub fetch() {
+        (run 'curl', '-L', '-k', '-s', '-f', $url, :out).out.slurp
+    }
+
+    my int $sleep = 1;
+    my $payload;
+    until $payload := fetch() {
+        die "Could not fetch data from '$url'"
+          if ($sleep = $sleep + $sleep) > 8;
+    }
+
+    $payload
 }
+
 # very basic remote JSON fetcher
 my sub meta-from-URL(Str:D $URL) {
     with GET($URL) {
