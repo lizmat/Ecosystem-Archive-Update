@@ -2,6 +2,9 @@ Revision history for Ecosystem-Archive-Update
 
 {{$NEXT}}
 
+0.0.31  2026-09-20T00:06:46+02:00
+    - Retry a failed GET a few times before giving up
+
 0.0.30  2026-09-17T19:16:36+02:00
     - Up dependencies to make RakuAST ready
 

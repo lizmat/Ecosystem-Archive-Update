@@ -4,7 +4,7 @@
   "specVersion": "1.6",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-09-17T17:17:10+00:00",
+    "timestamp": "2026-09-19T22:07:19+00:00",
     "lifecycles": [
       {
         "phase": "pre-build"
@@ -19,7 +19,7 @@
     "component": {
       "type": "library",
       "mime-type": "text/plain",
-      "bom-ref": "pkg:raku/zef:lizmat/Ecosystem::Archive::Update@0.0.30",
+      "bom-ref": "pkg:raku/zef:lizmat/Ecosystem::Archive::Update@0.0.31",
       "authors": [
         {
           "bom-ref": "ElizabethMattijsen",
@@ -29,7 +29,7 @@
       "publisher": "zef",
       "group": "zef:lizmat",
       "name": "Ecosystem::Archive::Update",
-      "version": "0.0.30",
+      "version": "0.0.31",
       "description": "Updating the Raku Ecosystem Archive",
       "scope": "required",
       "licenses": [
@@ -41,14 +41,14 @@
           }
         }
       ],
-      "purl": "pkg:raku/zef:lizmat/Ecosystem::Archive::Update@0.0.30",
+      "purl": "pkg:raku/zef:lizmat/Ecosystem::Archive::Update@0.0.31",
       "externalReferences": [
         {
           "url": "https://codeberg.org/lizmat/Ecosystem-Archive-Update",
           "type": "distribution"
         },
         {
-          "url": "https://raku.land/zef:lizmat/Ecosystem::Archive::Update?v=0.0.30",
+          "url": "https://raku.land/zef:lizmat/Ecosystem::Archive::Update?v=0.0.31",
           "type": "documentation"
         },
         {
@@ -152,7 +152,7 @@
       "publisher": "Rakudo Core Developers",
       "group": "Rakudo Core Developers",
       "name": "Rakudo",
-      "version": "2026.08-433-gb83057b10",
+      "version": "2026.08-465-g66cb1418f",
       "description": "The Rakudo™ Compiler implementing the Raku® Programming Language",
       "scope": "required",
       "licenses": [
@@ -175,7 +175,7 @@
           "type": "issue-tracker"
         },
         {
-          "url": "https://github.com/rakudo/rakudo/archive/b83057b10.zip",
+          "url": "https://github.com/rakudo/rakudo/archive/66cb1418f.zip",
           "type": "source-distribution"
         },
         {
@@ -1517,7 +1517,7 @@
       "type": "distribution"
     },
     {
-      "url": "https://raku.land/zef:lizmat/Ecosystem::Archive::Update?v=0.0.30",
+      "url": "https://raku.land/zef:lizmat/Ecosystem::Archive::Update?v=0.0.31",
       "type": "documentation"
     },
     {
